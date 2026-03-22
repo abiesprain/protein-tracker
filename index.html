@@ -486,14 +486,17 @@
 
   /* SETTINGS SUBPANEL (slide-in) */
   .settings-panel {
-    position: fixed; inset: 0; background: var(--bg); z-index: 400;
+    position: fixed; inset: 0; background: var(--bg); z-index: 401;
     display: none; flex-direction: column; max-width: 430px; margin: 0 auto;
     overflow-y: auto; -webkit-overflow-scrolling: touch;
+    padding-top: env(safe-area-inset-top);
   }
   .settings-panel.open { display: flex; }
   .settings-panel-header {
     padding: 16px 20px; background: var(--bg); border-bottom: 1px solid var(--border);
-    display: flex; align-items: center; gap: 12px; position: sticky; top: 0; z-index: 10;
+    display: flex; align-items: center; gap: 12px;
+    position: sticky; top: 0; z-index: 10;
+    min-height: 60px;
   }
   .settings-back-btn {
     background: none; border: none; font-size: 22px; cursor: pointer;
@@ -698,9 +701,8 @@
     <button class="nav-btn" onclick="showView('history')">History</button>
     <button class="nav-btn" onclick="showView('meals')">Meals</button>
     <button class="gear-btn" onclick="showView('settings')" title="Settings">
-      <svg width="20" height="20" viewBox="0 0 20 20" fill="none" xmlns="http://www.w3.org/2000/svg">
-        <path d="M10 13a3 3 0 1 0 0-6 3 3 0 0 0 0 6z" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/>
-        <path d="M10 2v1.5M10 16.5V18M2 10h1.5M16.5 10H18M4.1 4.1l1.05 1.05M14.85 14.85l1.05 1.05M4.1 15.9l1.05-1.05M14.85 5.15l1.05-1.05" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/>
+      <svg width="22" height="22" viewBox="0 0 24 24" fill="currentColor" xmlns="http://www.w3.org/2000/svg">
+        <path d="M12 15.5A3.5 3.5 0 0 1 8.5 12 3.5 3.5 0 0 1 12 8.5a3.5 3.5 0 0 1 3.5 3.5 3.5 3.5 0 0 1-3.5 3.5m7.43-2.92c.04-.34.07-.69.07-1.08s-.03-.73-.07-1.08l2.32-1.82c.21-.16.27-.45.14-.69l-2.2-3.81c-.13-.24-.42-.32-.66-.24l-2.74 1.1c-.57-.44-1.18-.8-1.86-1.08L14.17 2.4c-.04-.27-.27-.4-.53-.4h-4.4c-.26 0-.48.13-.52.4L8.27 5.38C7.59 5.66 6.98 6.02 6.41 6.46L3.67 5.36c-.24-.08-.53 0-.66.24L.81 9.41c-.13.24-.07.53.14.69l2.32 1.82C3.22 12.27 3.2 12.63 3.2 13s.02.73.07 1.08L1 15.9c-.21.16-.27.45-.14.69l2.2 3.81c.13.24.42.32.66.24l2.74-1.1c.57.44 1.18.8 1.86 1.08l.41 2.98c.04.27.26.4.52.4h4.4c.26 0 .49-.13.53-.4l.41-2.98c.68-.28 1.29-.64 1.86-1.08l2.74 1.1c.24.08.53 0 .66-.24l2.2-3.81c.13-.24.07-.53-.14-.69l-2.32-1.82z"/>
       </svg>
     </button>
   </div>
