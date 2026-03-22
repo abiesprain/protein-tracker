@@ -6,6 +6,10 @@
 <meta name="apple-mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-status-bar-style" content="default">
 <title>Protein</title>
+<link rel="apple-touch-icon" sizes="180x180" href="icon.png">
+<link rel="icon" type="image/png" sizes="32x32" href="icon.png">
+<meta name="apple-mobile-web-app-title" content="Protein">
+<meta name="theme-color" content="#2D5016">
 <link href="https://fonts.googleapis.com/css2?family=DM+Serif+Display:ital@0;1&family=DM+Sans:wght@300;400;500&display=swap" rel="stylesheet">
 <style>
   :root {
@@ -62,6 +66,119 @@
   .key-dot { width: 8px; height: 8px; border-radius: 50%; background: var(--accent-mid); flex-shrink: 0; }
   .key-dot.missing { background: var(--border); }
   .key-manage { font-size: 12px; color: var(--text-muted); text-decoration: underline; cursor: pointer; background: none; border: none; font-family: 'DM Sans', sans-serif; padding: 0; }
+
+  /* ONBOARDING */
+  .onboard-screen {
+    position: fixed; inset: 0; background: var(--bg); z-index: 600;
+    display: flex; flex-direction: column; max-width: 430px; margin: 0 auto;
+    overflow-y: auto; -webkit-overflow-scrolling: touch;
+  }
+  .onboard-screen.hidden { display: none; }
+  .onboard-hero {
+    background: var(--accent); padding: 48px 28px 32px;
+    display: flex; flex-direction: column; align-items: center; gap: 8px;
+  }
+  .onboard-logo { font-family: "DM Serif Display", serif; font-size: 42px; color: white; letter-spacing: -1px; }
+  .onboard-tagline { font-size: 14px; color: rgba(255,255,255,0.7); letter-spacing: 0.3px; }
+  .onboard-body { padding: 28px 24px 48px; display: flex; flex-direction: column; gap: 24px; }
+  .onboard-step { display: none; flex-direction: column; gap: 16px; }
+  .onboard-step.active { display: flex; }
+  .onboard-step-title { font-family: "DM Serif Display", serif; font-size: 24px; letter-spacing: -0.3px; }
+  .onboard-step-sub { font-size: 14px; color: var(--text-muted); line-height: 1.6; margin-top: -8px; }
+  .onboard-label { font-size: 11px; font-weight: 500; color: var(--text-muted); text-transform: uppercase; letter-spacing: 0.8px; margin-bottom: 4px; }
+  .onboard-input {
+    width: 100%; border: 1.5px solid var(--border); border-radius: var(--radius-sm);
+    padding: 14px 16px; font-family: "DM Sans", sans-serif; font-size: 16px;
+    color: var(--text); background: var(--surface); outline: none;
+  }
+  .onboard-input:focus { border-color: var(--accent); }
+  .onboard-option-grid { display: flex; flex-direction: column; gap: 8px; }
+  .onboard-option {
+    background: var(--surface); border: 1.5px solid var(--border);
+    border-radius: var(--radius-sm); padding: 14px 16px;
+    font-family: "DM Sans", sans-serif; font-size: 15px; cursor: pointer;
+    text-align: left; color: var(--text); transition: all 0.15s;
+    display: flex; align-items: center; justify-content: space-between;
+  }
+  .onboard-option.selected { border-color: var(--accent); background: var(--accent-light); color: var(--accent); }
+  .onboard-option .opt-check { width: 20px; height: 20px; border-radius: 50%; border: 2px solid var(--border); flex-shrink: 0; transition: all 0.15s; }
+  .onboard-option.selected .opt-check { background: var(--accent); border-color: var(--accent); }
+  .onboard-calc-result {
+    background: var(--accent-light); border: 1px solid #C5DDA8;
+    border-radius: var(--radius-sm); padding: 16px; display: none; flex-direction: column; gap: 4px;
+  }
+  .onboard-calc-result.visible { display: flex; }
+  .onboard-calc-main { font-family: "DM Serif Display", serif; font-size: 28px; color: var(--accent); }
+  .onboard-calc-sub { font-size: 13px; color: var(--approx); }
+  .onboard-next-btn {
+    background: var(--accent); color: white; border: none;
+    border-radius: var(--radius-sm); padding: 16px; font-size: 16px; font-weight: 500;
+    font-family: "DM Sans", sans-serif; cursor: pointer; transition: opacity 0.15s;
+    margin-top: 4px;
+  }
+  .onboard-next-btn:active { opacity: 0.8; }
+  .onboard-next-btn:disabled { opacity: 0.35; }
+  .onboard-back { background: none; border: none; font-size: 14px; color: var(--text-muted);
+    font-family: "DM Sans", sans-serif; cursor: pointer; padding: 0; align-self: flex-start; }
+  .onboard-progress { display: flex; gap: 6px; justify-content: center; padding: 16px 0 0; }
+  .onboard-dot { width: 6px; height: 6px; border-radius: 50%; background: var(--border); transition: background 0.2s; }
+  .onboard-dot.active { background: var(--accent); }
+  .qa-onboard-chips { display: flex; flex-wrap: wrap; gap: 8px; }
+  .qa-chip-toggle {
+    display: flex; align-items: center; gap: 6px;
+    background: var(--surface); border: 1.5px solid var(--border);
+    border-radius: 20px; padding: 8px 14px; font-size: 13px; cursor: pointer;
+    font-family: "DM Sans", sans-serif; color: var(--text); transition: all 0.15s;
+  }
+  .qa-chip-toggle.selected { background: var(--accent-light); border-color: var(--accent); color: var(--accent); }
+  .qa-chip-protein { font-size: 12px; font-weight: 500; }
+
+  /* MANUAL ENTRY CARD */
+  .manual-card {
+    background: var(--surface); border-radius: var(--radius); border: 1px solid var(--border); overflow: hidden;
+  }
+  .manual-card-inner { display: flex; align-items: center; gap: 8px; padding: 10px 10px 10px 14px; }
+  .manual-name-input {
+    flex: 1; min-width: 0; border: none; outline: none; background: var(--bg);
+    border-radius: var(--radius-sm); padding: 12px 14px;
+    font-family: "DM Sans", sans-serif; font-size: 16px; color: var(--text);
+  }
+  .manual-name-input::placeholder { color: var(--text-muted); }
+  .manual-g-wrap {
+    display: flex; align-items: center; gap: 0;
+    background: var(--bg); border-radius: var(--radius-sm); flex-shrink: 0;
+  }
+  .manual-g-input {
+    width: 52px; border: none; outline: none; background: transparent;
+    padding: 12px 4px 12px 10px;
+    font-family: "DM Sans", sans-serif; font-size: 16px; color: var(--text);
+    text-align: right;
+  }
+  .manual-g-input::placeholder { color: var(--text-muted); }
+  .manual-g-label { font-size: 15px; color: var(--text-muted); font-weight: 400; padding-right: 8px; }
+  .manual-add-btn {
+    background: var(--accent); color: white; border: none;
+    border-radius: var(--radius-sm); padding: 12px 18px;
+    font-family: "DM Sans", sans-serif; font-size: 15px; font-weight: 500;
+    cursor: pointer; height: 48px; transition: opacity 0.15s;
+    white-space: nowrap; flex-shrink: 0;
+  }
+  .manual-add-btn:active { opacity: 0.8; }
+
+  /* AI CARD */
+  .ai-card {
+    background: var(--surface); border-radius: var(--radius); border: 1px solid var(--border); overflow: hidden;
+  }
+  .ai-card-header {
+    padding: 12px 14px 0; display: flex; align-items: center; justify-content: space-between;
+  }
+  .ai-card-label { font-size: 11px; font-weight: 500; color: var(--text-muted); text-transform: uppercase; letter-spacing: 0.8px; }
+  .ai-card-key-nudge {
+    font-size: 12px; color: var(--accent); cursor: pointer; text-decoration: underline;
+    background: none; border: none; font-family: "DM Sans", sans-serif; padding: 0;
+  }
+  .ai-card.locked { opacity: 0.5; pointer-events: none; }
+  .ai-card.locked .ai-card-header { pointer-events: auto; }
 
   /* HEADER */
   .header {
@@ -341,6 +458,94 @@
   .modal-cancel { width: 100%; background: none; border: none; padding: 12px;
     font-size: 15px; color: var(--text-muted); cursor: pointer; font-family: 'DM Sans', sans-serif; margin-top: 4px; }
 
+  /* SETTINGS VIEW */
+  #view-settings { padding: 20px; display: none; flex-direction: column; gap: 16px; }
+  .settings-section-label {
+    font-size: 11px; font-weight: 500; color: var(--text-muted);
+    text-transform: uppercase; letter-spacing: 0.8px; padding: 0 2px; margin-top: 4px;
+  }
+  .settings-card {
+    background: var(--surface); border: 1px solid var(--border);
+    border-radius: var(--radius); overflow: hidden;
+  }
+  .settings-row {
+    display: flex; align-items: center; justify-content: space-between;
+    padding: 14px 16px; border-bottom: 1px solid var(--border); cursor: pointer;
+  }
+  .settings-row:last-child { border-bottom: none; }
+  .settings-row-left { display: flex; flex-direction: column; gap: 2px; }
+  .settings-row-title { font-size: 15px; font-weight: 500; }
+  .settings-row-sub { font-size: 13px; color: var(--text-muted); }
+  .settings-row-right { display: flex; align-items: center; gap: 8px; color: var(--text-muted); font-size: 13px; }
+  .settings-chevron { color: var(--border); font-size: 16px; }
+  .settings-badge {
+    background: var(--accent-light); color: var(--accent);
+    border-radius: 10px; padding: 2px 8px; font-size: 12px; font-weight: 500;
+  }
+  .settings-badge.warn { background: var(--warn-light); color: var(--warn); }
+
+  /* SETTINGS SUBPANEL (slide-in) */
+  .settings-panel {
+    position: fixed; inset: 0; background: var(--bg); z-index: 400;
+    display: none; flex-direction: column; max-width: 430px; margin: 0 auto;
+    overflow-y: auto; -webkit-overflow-scrolling: touch;
+  }
+  .settings-panel.open { display: flex; }
+  .settings-panel-header {
+    padding: 16px 20px; background: var(--bg); border-bottom: 1px solid var(--border);
+    display: flex; align-items: center; gap: 12px; position: sticky; top: 0; z-index: 10;
+  }
+  .settings-back-btn {
+    background: none; border: none; font-size: 22px; cursor: pointer;
+    color: var(--accent); padding: 0; line-height: 1;
+  }
+  .settings-panel-title { font-family: 'DM Serif Display', serif; font-size: 20px; }
+  .settings-panel-body { padding: 20px; display: flex; flex-direction: column; gap: 16px; }
+  .settings-field { display: flex; flex-direction: column; gap: 6px; }
+  .settings-field-label { font-size: 11px; font-weight: 500; color: var(--text-muted); text-transform: uppercase; letter-spacing: 0.8px; }
+  .settings-input {
+    width: 100%; border: 1.5px solid var(--border); border-radius: var(--radius-sm);
+    padding: 13px 14px; font-family: 'DM Sans', sans-serif; font-size: 16px;
+    color: var(--text); background: var(--surface); outline: none;
+  }
+  .settings-input:focus { border-color: var(--accent); }
+  .settings-save-btn {
+    background: var(--accent); color: white; border: none; border-radius: var(--radius-sm);
+    padding: 15px; font-size: 15px; font-weight: 500; font-family: 'DM Sans', sans-serif;
+    cursor: pointer; transition: opacity 0.15s;
+  }
+  .settings-save-btn:active { opacity: 0.8; }
+  .settings-danger-btn {
+    background: none; border: 1.5px solid var(--warn); border-radius: var(--radius-sm);
+    padding: 13px; font-size: 15px; font-weight: 500; font-family: 'DM Sans', sans-serif;
+    color: var(--warn); cursor: pointer; transition: all 0.15s; width: 100%;
+  }
+
+  /* HOME SCREEN INSTRUCTIONS */
+  .hs-step {
+    background: var(--surface); border: 1px solid var(--border);
+    border-radius: var(--radius-sm); padding: 14px 16px;
+    display: flex; align-items: flex-start; gap: 12px;
+  }
+  .hs-step-num {
+    background: var(--accent); color: white; border-radius: 50%;
+    width: 24px; height: 24px; display: flex; align-items: center; justify-content: center;
+    font-size: 13px; font-weight: 500; flex-shrink: 0; margin-top: 1px;
+  }
+  .hs-step-text { font-size: 14px; line-height: 1.5; color: var(--text); }
+  .hs-step-text strong { font-weight: 500; }
+  .hs-share-icon {
+    display: inline-block; background: var(--accent-light); border-radius: 6px;
+    padding: 2px 6px; font-size: 13px; vertical-align: middle;
+  }
+
+  /* GEAR ICON BTN */
+  .gear-btn {
+    background: none; border: none; cursor: pointer; padding: 6px;
+    color: var(--text-muted); font-size: 20px; line-height: 1; display: flex; align-items: center;
+  }
+  .gear-btn:active { color: var(--text); }
+
   /* TOAST */
   .toast {
     position: fixed; bottom: 24px; left: 50%; transform: translateX(-50%) translateY(80px);
@@ -356,6 +561,111 @@
 </style>
 </head>
 <body>
+
+<!-- ONBOARDING SCREEN -->
+<div class="onboard-screen hidden" id="onboard-screen">
+  <div class="onboard-hero">
+    <div class="onboard-logo">Protein</div>
+    <div class="onboard-tagline">Track smarter. Build more.</div>
+  </div>
+  <div class="onboard-body">
+
+    <!-- STEP 1: Goal method -->
+    <div class="onboard-step active" id="onboard-step-1">
+      <div class="onboard-step-title">Set your protein goal</div>
+      <div class="onboard-step-sub">How would you like to set your daily target?</div>
+      <div class="onboard-option-grid">
+        <button class="onboard-option" onclick="selectGoalMethod('calculate')" id="opt-calculate">
+          <span>🧮 Calculate it for me</span><span class="opt-check"></span>
+        </button>
+        <button class="onboard-option" onclick="selectGoalMethod('manual')" id="opt-manual">
+          <span>✏️ I know my goal</span><span class="opt-check"></span>
+        </button>
+      </div>
+
+      <!-- Calculate sub-form -->
+      <div id="calc-form" style="display:none;flex-direction:column;gap:12px">
+        <div>
+          <div class="onboard-label">Your weight</div>
+          <div style="display:flex;gap:8px">
+            <input class="onboard-input" id="ob-weight" type="number" placeholder="160" inputmode="decimal" style="flex:1" oninput="calcGoal()">
+            <select class="onboard-input" id="ob-unit" style="width:72px" onchange="calcGoal()">
+              <option value="lbs">lbs</option>
+              <option value="kg">kg</option>
+            </select>
+          </div>
+        </div>
+        <div>
+          <div class="onboard-label">Activity level</div>
+          <div class="onboard-option-grid" id="activity-opts">
+            <button class="onboard-option" onclick="selectActivity('sedentary')" id="act-sedentary"><span>🪑 Sedentary</span><span class="opt-check"></span></button>
+            <button class="onboard-option" onclick="selectActivity('moderate')" id="act-moderate"><span>🚶 Moderate (3–4x/week)</span><span class="opt-check"></span></button>
+            <button class="onboard-option" onclick="selectActivity('active')" id="act-active"><span>🏋️ Very active (5–6x/week)</span><span class="opt-check"></span></button>
+            <button class="onboard-option" onclick="selectActivity('athlete')" id="act-athlete"><span>⚡ Athlete (daily training)</span><span class="opt-check"></span></button>
+          </div>
+        </div>
+        <div>
+          <div class="onboard-label">Primary goal</div>
+          <div class="onboard-option-grid">
+            <button class="onboard-option" onclick="selectGoalType('build')" id="goal-build"><span>💪 Build muscle</span><span class="opt-check"></span></button>
+            <button class="onboard-option" onclick="selectGoalType('lose')" id="goal-lose"><span>🔥 Lose fat, preserve muscle</span><span class="opt-check"></span></button>
+            <button class="onboard-option" onclick="selectGoalType('maintain')" id="goal-maintain"><span>⚖️ Maintain / general health</span><span class="opt-check"></span></button>
+          </div>
+        </div>
+        <div class="onboard-calc-result" id="calc-result">
+          <div class="onboard-calc-main" id="calc-result-val"></div>
+          <div class="onboard-calc-sub" id="calc-result-note"></div>
+        </div>
+      </div>
+
+      <!-- Manual sub-form -->
+      <div id="manual-form" style="display:none;flex-direction:column;gap:8px">
+        <div class="onboard-label">Daily protein goal (grams)</div>
+        <input class="onboard-input" id="ob-manual-goal" type="number" placeholder="145" inputmode="decimal">
+      </div>
+
+      <button class="onboard-next-btn" id="ob-next-1" onclick="onboardNext(2)" disabled>Continue →</button>
+    </div>
+
+    <!-- STEP 2: Customize quick-adds -->
+    <div class="onboard-step" id="onboard-step-2">
+      <button class="onboard-back" onclick="onboardBack(1)">← Back</button>
+      <div class="onboard-step-title">Quick-add chips</div>
+      <div class="onboard-step-sub">Pick the foods you eat most. These become one-tap shortcuts on your home screen.</div>
+      <div class="qa-onboard-chips" id="qa-onboard-chips"></div>
+      <button class="onboard-next-btn" id="ob-next-2" onclick="onboardNext(3)">Continue →</button>
+    </div>
+
+    <!-- STEP 3: Add to Home Screen (Safari/iOS only) -->
+    <div class="onboard-step" id="onboard-step-3">
+      <button class="onboard-back" onclick="onboardBack(2)">← Back</button>
+      <div class="onboard-step-title">Add to your home screen</div>
+      <div class="onboard-step-sub">Install this app for quick access — just like a native app, no App Store needed.</div>
+      <div style="display:flex;flex-direction:column;gap:10px">
+        <div class="hs-step">
+          <div class="hs-step-num">1</div>
+          <div class="hs-step-text">Tap the <span class="hs-share-icon">⬆️ Share</span> button at the bottom of Safari</div>
+        </div>
+        <div class="hs-step">
+          <div class="hs-step-num">2</div>
+          <div class="hs-step-text">Scroll down and tap <strong>"Add to Home Screen"</strong></div>
+        </div>
+        <div class="hs-step">
+          <div class="hs-step-num">3</div>
+          <div class="hs-step-text">Tap <strong>Add</strong> — the Protein app icon will appear on your home screen</div>
+        </div>
+      </div>
+      <button class="onboard-next-btn" onclick="onboardFinish()">Done — Let's go →</button>
+      <button class="onboard-back" onclick="onboardFinish()" style="align-self:center;margin-top:4px">Skip for now</button>
+    </div>
+
+    <div class="onboard-progress">
+      <div class="onboard-dot active" id="ob-dot-1"></div>
+      <div class="onboard-dot" id="ob-dot-2"></div>
+      <div class="onboard-dot" id="ob-dot-3"></div>
+    </div>
+  </div>
+</div>
 
 <!-- API KEY SETUP SCREEN -->
 <div class="setup-screen hidden" id="setup-screen">
@@ -384,14 +694,15 @@
     <div class="header-date" id="header-date"></div>
   </div>
   <div class="header-nav">
-    <button class="key-manage" onclick="openSetupScreen()" title="Manage API key">
-      <span class="key-indicator">
-        <span class="key-dot" id="key-dot"></span>API Key
-      </span>
-    </button>
     <button class="nav-btn active" onclick="showView('today')">Today</button>
     <button class="nav-btn" onclick="showView('history')">History</button>
     <button class="nav-btn" onclick="showView('meals')">Meals</button>
+    <button class="gear-btn" onclick="showView('settings')" title="Settings">
+      <svg width="20" height="20" viewBox="0 0 20 20" fill="none" xmlns="http://www.w3.org/2000/svg">
+        <path d="M10 13a3 3 0 1 0 0-6 3 3 0 0 0 0 6z" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/>
+        <path d="M10 2v1.5M10 16.5V18M2 10h1.5M16.5 10H18M4.1 4.1l1.05 1.05M14.85 14.85l1.05 1.05M4.1 15.9l1.05-1.05M14.85 5.15l1.05-1.05" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/>
+      </svg>
+    </button>
   </div>
 </div>
 
@@ -431,27 +742,47 @@
       <div class="goal-range">Goal: <span id="goal-display">135–155g</span></div>
     </div>
 
-    <!-- AI Follow-up bubble -->
-    <div class="ai-bubble" id="ai-bubble">
-      <div id="ai-bubble-content"></div>
+    <!-- Manual Entry -->
+    <div class="manual-card">
+      <div class="manual-card-inner">
+        <input class="manual-name-input" id="manual-name" placeholder="Food name" autocorrect="off">
+        <div class="manual-g-wrap">
+          <input class="manual-g-input" id="manual-g" type="number" placeholder="0" inputmode="decimal">
+          <span class="manual-g-label">g</span>
+        </div>
+        <button class="manual-add-btn" onclick="manualLog()">Add</button>
+      </div>
     </div>
 
-    <!-- Log Card -->
+    <!-- Quick Adds + Saved Meals tabs -->
     <div class="log-card">
-      <div class="log-input-wrap">
-        <textarea class="log-input" id="log-input" placeholder="What did you eat?" rows="1"
-          oninput="autoResize(this)" onkeydown="handleEnter(event)"></textarea>
-        <button class="log-btn" id="log-btn" onclick="submitLog()">Log →</button>
-      </div>
-
-      <!-- Shortcut tabs -->
       <div class="shortcuts-tabs">
         <div class="shortcut-tab active" onclick="switchTab('quick')">Quick Adds</div>
         <div class="shortcut-tab" onclick="switchTab('saved')">My Meals</div>
       </div>
-
       <div class="shortcuts-panel active" id="panel-quick"></div>
       <div class="shortcuts-panel" id="panel-saved"></div>
+    </div>
+
+    <!-- AI Log Card -->
+    <div class="ai-card" id="ai-card">
+      <div class="ai-card-header">
+        <span class="ai-card-label">AI Log</span>
+        <button class="ai-card-key-nudge" id="ai-key-nudge" onclick="openSetupScreen()" style="display:none">Add API key to unlock</button>
+      </div>
+
+      <!-- AI Follow-up bubble -->
+      <div class="ai-bubble" id="ai-bubble" style="margin:10px 14px 0">
+        <div id="ai-bubble-content"></div>
+      </div>
+
+      <div style="padding:10px 14px 14px">
+        <div style="display:flex;gap:10px;align-items:flex-end">
+          <textarea class="log-input" id="log-input" placeholder="Describe what you ate…" rows="1"
+            oninput="autoResize(this)" onkeydown="handleEnter(event)"></textarea>
+          <button class="log-btn" id="log-btn" onclick="submitLog()">Log →</button>
+        </div>
+      </div>
     </div>
 
     <!-- Today's log -->
@@ -470,19 +801,203 @@
     <div class="section-label">Past Days</div>
     <div id="history-list"></div>
 
-    <div style="margin-top:8px">
-      <button class="export-btn" onclick="toggleExport()">
-        <span>📋 Export / Backup Data</span>
-        <span id="export-chevron" style="font-size:12px">▼</span>
-      </button>
-      <div class="export-panel" id="export-panel">
-        <textarea class="export-textarea" id="export-text" rows="10" readonly placeholder="Your data will appear here..."></textarea>
-        <div class="export-actions">
-          <button class="export-action-btn" onclick="copyExport()">Copy All</button>
-          <button class="export-action-btn" onclick="shareExport()">Share…</button>
-          <button class="export-action-btn" onclick="importPrompt()" style="color:var(--text-muted)">Restore</button>
+  </div>
+
+  <!-- SETTINGS VIEW -->
+  <div id="view-settings">
+    <div class="settings-section-label">Profile & Goal</div>
+    <div class="settings-card">
+      <div class="settings-row" onclick="openSettingsPanel('goal')">
+        <div class="settings-row-left">
+          <div class="settings-row-title">Protein Goal</div>
+          <div class="settings-row-sub" id="settings-goal-sub">Loading...</div>
+        </div>
+        <div class="settings-row-right"><span class="settings-chevron">›</span></div>
+      </div>
+    </div>
+
+    <div class="settings-section-label">App</div>
+    <div class="settings-card">
+      <div class="settings-row" onclick="openSettingsPanel('apikey')">
+        <div class="settings-row-left">
+          <div class="settings-row-title">API Key</div>
+          <div class="settings-row-sub">Required for AI food logging</div>
+        </div>
+        <div class="settings-row-right">
+          <span class="settings-badge" id="settings-key-badge">Not set</span>
+          <span class="settings-chevron">›</span>
         </div>
       </div>
+      <div class="settings-row" onclick="openSettingsPanel('homescreen')">
+        <div class="settings-row-left">
+          <div class="settings-row-title">Add to Home Screen</div>
+          <div class="settings-row-sub">Install as iPhone app</div>
+        </div>
+        <div class="settings-row-right"><span class="settings-chevron">›</span></div>
+      </div>
+    </div>
+
+    <div class="settings-section-label">Data</div>
+    <div class="settings-card">
+      <div class="settings-row" onclick="openSettingsPanel('backup')">
+        <div class="settings-row-left">
+          <div class="settings-row-title">Export & Backup</div>
+          <div class="settings-row-sub">Copy or share your history</div>
+        </div>
+        <div class="settings-row-right"><span class="settings-chevron">›</span></div>
+      </div>
+      <div class="settings-row" onclick="openSettingsPanel('cleardata')">
+        <div class="settings-row-left">
+          <div class="settings-row-title" style="color:var(--warn)">Clear Data</div>
+          <div class="settings-row-sub">Remove logs or full reset</div>
+        </div>
+        <div class="settings-row-right"><span class="settings-chevron">›</span></div>
+      </div>
+    </div>
+  </div>
+
+  <!-- SETTINGS SUBPANELS -->
+
+  <!-- Goal Panel -->
+  <div class="settings-panel" id="panel-goal">
+    <div class="settings-panel-header">
+      <button class="settings-back-btn" onclick="closeSettingsPanel('goal')">‹</button>
+      <div class="settings-panel-title">Protein Goal</div>
+    </div>
+    <div class="settings-panel-body">
+      <div class="onboard-calc-result visible" id="settings-goal-display" style="margin-bottom:4px">
+        <div class="onboard-calc-main" id="settings-goal-val"></div>
+        <div class="onboard-calc-sub" id="settings-goal-note"></div>
+      </div>
+      <div class="settings-section-label" style="margin-top:4px">Recalculate</div>
+      <div class="settings-field">
+        <div class="settings-field-label">Weight</div>
+        <div style="display:flex;gap:8px">
+          <input class="settings-input" id="s-weight" type="number" placeholder="160" inputmode="decimal" style="flex:1" oninput="settingsCalcGoal()">
+          <select class="settings-input" id="s-unit" style="width:72px" onchange="settingsCalcGoal()">
+            <option value="lbs">lbs</option><option value="kg">kg</option>
+          </select>
+        </div>
+      </div>
+      <div class="settings-field">
+        <div class="settings-field-label">Activity</div>
+        <select class="settings-input" id="s-activity" onchange="settingsCalcGoal()">
+          <option value="sedentary">Sedentary</option>
+          <option value="moderate">Moderate (3–4x/week)</option>
+          <option value="active">Very active (5–6x/week)</option>
+          <option value="athlete">Athlete (daily)</option>
+        </select>
+      </div>
+      <div class="settings-field">
+        <div class="settings-field-label">Goal</div>
+        <select class="settings-input" id="s-goaltype" onchange="settingsCalcGoal()">
+          <option value="build">Build muscle</option>
+          <option value="lose">Lose fat, preserve muscle</option>
+          <option value="maintain">Maintain</option>
+        </select>
+      </div>
+      <div class="settings-section-label">Or set manually</div>
+      <div style="display:flex;gap:8px;align-items:center">
+        <input class="settings-input" id="s-manual-goal" type="number" placeholder="145g" inputmode="decimal" style="flex:1">
+        <button class="settings-save-btn" onclick="saveManualGoalFromSettings()" style="white-space:nowrap;padding:13px 16px">Set</button>
+      </div>
+      <button class="settings-save-btn" id="s-calc-save" onclick="saveCalcGoalFromSettings()" style="display:none">Save calculated goal</button>
+    </div>
+  </div>
+
+  <!-- API Key Panel -->
+  <div class="settings-panel" id="panel-apikey">
+    <div class="settings-panel-header">
+      <button class="settings-back-btn" onclick="closeSettingsPanel('apikey')">‹</button>
+      <div class="settings-panel-title">API Key</div>
+    </div>
+    <div class="settings-panel-body">
+      <p style="font-size:14px;color:var(--text-muted);line-height:1.6">An Anthropic API key enables AI-powered food logging. Get one free at <a href="https://console.anthropic.com" target="_blank" style="color:var(--accent)">console.anthropic.com</a>.<br><br>Your key is stored only on this device.</p>
+      <div class="settings-field">
+        <div class="settings-field-label">API Key</div>
+        <input class="settings-input" id="s-api-key" type="password" placeholder="sk-ant-..." autocomplete="off" autocorrect="off" spellcheck="false">
+      </div>
+      <button class="settings-save-btn" onclick="saveApiKeyFromSettings()">Save Key</button>
+      <button class="settings-danger-btn" onclick="removeApiKey()" id="s-remove-key" style="display:none">Remove Key</button>
+    </div>
+  </div>
+
+  <!-- Home Screen Panel -->
+  <div class="settings-panel" id="panel-homescreen">
+    <div class="settings-panel-header">
+      <button class="settings-back-btn" onclick="closeSettingsPanel('homescreen')">‹</button>
+      <div class="settings-panel-title">Add to Home Screen</div>
+    </div>
+    <div class="settings-panel-body">
+      <p style="font-size:14px;color:var(--text-muted);line-height:1.6;margin-bottom:4px">Install Protein as an app icon on your iPhone home screen — no App Store needed.</p>
+      <div style="display:flex;flex-direction:column;gap:10px">
+        <div class="hs-step"><div class="hs-step-num">1</div><div class="hs-step-text">Open this page in <strong>Safari</strong> on your iPhone</div></div>
+        <div class="hs-step"><div class="hs-step-num">2</div><div class="hs-step-text">Tap the <span class="hs-share-icon">⬆️ Share</span> button at the bottom of the screen</div></div>
+        <div class="hs-step"><div class="hs-step-num">3</div><div class="hs-step-text">Scroll down and tap <strong>"Add to Home Screen"</strong></div></div>
+        <div class="hs-step"><div class="hs-step-num">4</div><div class="hs-step-text">Tap <strong>Add</strong> — the Protein icon appears on your home screen</div></div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Backup Panel -->
+  <div class="settings-panel" id="panel-backup">
+    <div class="settings-panel-header">
+      <button class="settings-back-btn" onclick="closeSettingsPanel('backup')">‹</button>
+      <div class="settings-panel-title">Export & Backup</div>
+    </div>
+    <div class="settings-panel-body">
+      <p style="font-size:14px;color:var(--text-muted);line-height:1.6">Export your full history as text. Paste it back using Restore to recover data if Safari clears your storage.</p>
+      <textarea id="settings-export-text" rows="10" readonly style="width:100%;border:1.5px solid var(--border);border-radius:var(--radius-sm);padding:12px 14px;font-family:DM Sans,sans-serif;font-size:13px;background:var(--bg);color:var(--text);line-height:1.6;resize:none;outline:none"></textarea>
+      <div style="display:flex;gap:8px">
+        <button class="settings-save-btn" onclick="settingsCopyExport()" style="flex:1">Copy</button>
+        <button class="settings-save-btn" onclick="settingsShareExport()" style="flex:1">Share…</button>
+      </div>
+      <div style="border-top:1px solid var(--border);padding-top:16px;display:flex;flex-direction:column;gap:8px">
+        <div class="settings-field-label">Restore from backup</div>
+        <textarea id="settings-import-text" rows="5" placeholder="Paste exported data here..." style="width:100%;border:1.5px solid var(--border);border-radius:var(--radius-sm);padding:12px 14px;font-family:DM Sans,sans-serif;font-size:13px;background:var(--surface);color:var(--text);line-height:1.6;resize:none;outline:none"></textarea>
+        <button class="settings-save-btn" onclick="settingsDoImport()">Restore Data</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Clear Data Panel -->
+  <div class="settings-panel" id="panel-cleardata">
+    <div class="settings-panel-header">
+      <button class="settings-back-btn" onclick="closeSettingsPanel('cleardata')">‹</button>
+      <div class="settings-panel-title">Clear Data</div>
+    </div>
+    <div class="settings-panel-body">
+
+      <div class="settings-card" style="overflow:visible">
+        <div style="padding:16px">
+          <div style="font-size:15px;font-weight:500;margin-bottom:6px">Clear daily logs</div>
+          <div style="font-size:13px;color:var(--text-muted);line-height:1.5;margin-bottom:14px">Removes all logged entries and history. Keeps your goal, saved meals, quick-adds, and API key.</div>
+          <div id="confirm-logs-wrap" style="display:none;flex-direction:column;gap:8px;margin-bottom:10px;background:var(--warn-light);border-radius:var(--radius-sm);padding:12px">
+            <div style="font-size:14px;color:var(--warn);font-weight:500">Are you sure? This cannot be undone.</div>
+            <div style="display:flex;gap:8px">
+              <button class="settings-danger-btn" onclick="confirmClearLogs()" style="flex:1;padding:10px">Yes, clear logs</button>
+              <button onclick="cancelClear('logs')" style="flex:1;background:var(--surface);border:1.5px solid var(--border);border-radius:var(--radius-sm);padding:10px;font-family:DM Sans,sans-serif;font-size:14px;cursor:pointer">Cancel</button>
+            </div>
+          </div>
+          <button class="settings-danger-btn" id="clear-logs-btn" onclick="promptClear('logs')">Clear Daily Logs</button>
+        </div>
+      </div>
+
+      <div class="settings-card" style="overflow:visible">
+        <div style="padding:16px">
+          <div style="font-size:15px;font-weight:500;margin-bottom:6px">Full reset</div>
+          <div style="font-size:13px;color:var(--text-muted);line-height:1.5;margin-bottom:14px">Wipes everything — logs, meals, quick-adds, goal, and API key — and restarts onboarding. Use this to start completely fresh.</div>
+          <div id="confirm-reset-wrap" style="display:none;flex-direction:column;gap:8px;margin-bottom:10px;background:var(--warn-light);border-radius:var(--radius-sm);padding:12px">
+            <div style="font-size:14px;color:var(--warn);font-weight:500">This will delete everything. Are you sure?</div>
+            <div style="display:flex;gap:8px">
+              <button class="settings-danger-btn" onclick="confirmFullReset()" style="flex:1;padding:10px">Yes, reset everything</button>
+              <button onclick="cancelClear('reset')" style="flex:1;background:var(--surface);border:1.5px solid var(--border);border-radius:var(--radius-sm);padding:10px;font-family:DM Sans,sans-serif;font-size:14px;cursor:pointer">Cancel</button>
+            </div>
+          </div>
+          <button class="settings-danger-btn" id="clear-reset-btn" onclick="promptClear('reset')">Full Reset</button>
+        </div>
+      </div>
+
     </div>
   </div>
 
@@ -616,10 +1131,10 @@ const GOAL_HIGH = 155;
 const CIRCUMFERENCE = 439.82;
 
 const DEFAULT_QUICK_ADDS = [
-  { emoji: '🍗', name: 'Chicken', portion: 'handful', protein: 30, approx: true },
-  { emoji: '🥛', name: 'Greek Yogurt', portion: 'bowl (~1 cup)', protein: 17, approx: true },
+  { emoji: '🍗', name: 'Chicken Breast', portion: '~4 oz cooked', protein: 35, approx: true },
+  { emoji: '🥛', name: 'Greek Yogurt', portion: '1 cup', protein: 17, approx: true },
   { emoji: '🥤', name: 'Protein Shake', portion: '1 scoop', protein: 25, approx: false },
-  { emoji: '🥜', name: 'Peanut Butter', portion: '1 tbsp', protein: 4, approx: false },
+  { emoji: '🥚', name: 'Eggs', portion: '2 eggs', protein: 12, approx: false },
 ];
 
 function loadQuickAdds() {
@@ -666,6 +1181,7 @@ function saveApiKey() {
   localStorage.setItem('protein_api_key', key);
   closeSetupScreen();
   updateKeyIndicator();
+  updateAICardState();
   showToast('API key saved ✓');
 }
 function skipApiKey() {
@@ -686,32 +1202,68 @@ function closeSetupScreen() {
 }
 function updateKeyIndicator() {
   const dot = document.getElementById('key-dot');
-  dot.classList.toggle('missing', !getApiKey());
+  if (dot) dot.classList.toggle('missing', !getApiKey());
+}
+
+// ── GOAL ───────────────────────────────────────────────────
+function loadGoal() {
+  const g = localStorage.getItem('protein_goal');
+  return g ? JSON.parse(g) : { target: 145, low: 135, high: 155 };
+}
+function saveGoalData(goal) {
+  localStorage.setItem('protein_goal', JSON.stringify(goal));
+}
+function updateGoalDisplay() {
+  const g = loadGoal();
+  const el = document.getElementById('goal-display');
+  if (el) el.textContent = g.low + '–' + g.high + 'g';
+  const rem = document.getElementById('stat-remaining');
+  if (rem) {
+    const { data, key } = getToday();
+    const total = (data[key]?.entries || []).reduce((s,e) => s + e.protein, 0);
+    rem.textContent = Math.max(0, g.low - Math.round(total)) + 'g';
+  }
 }
 
 // ── INIT ───────────────────────────────────────────────────
 let activeShortcutTab = 'quick';
-let aiState = null; // pending AI interaction state
+let aiState = null;
 
 document.addEventListener('DOMContentLoaded', () => {
   document.getElementById('header-date').textContent = new Date().toLocaleDateString('en-US', { weekday: 'long', month: 'long', day: 'numeric' });
-  // Show setup screen if no key and never skipped
-  const hasKey = !!getApiKey();
-  const skipped = !!localStorage.getItem('protein_api_key_skipped');
-  if (!hasKey && !skipped) {
-    document.getElementById('setup-screen').classList.remove('hidden');
+
+  const onboarded = !!localStorage.getItem('protein_onboarded');
+  if (!onboarded) {
+    showOnboarding();
+  } else {
+    // show API key screen if needed
+    const hasKey = !!getApiKey();
+    const skipped = !!localStorage.getItem('protein_api_key_skipped');
+    if (!hasKey && !skipped) {
+      document.getElementById('setup-screen').classList.remove('hidden');
+    }
   }
   updateKeyIndicator();
+  updateAICardState();
   renderQuickAdds();
   renderSavedMealsChips();
   renderTodayEntries();
   renderHistory();
   renderMealsView();
+  updateGoalDisplay();
 });
+
+function updateAICardState() {
+  const card = document.getElementById('ai-card');
+  const nudge = document.getElementById('ai-key-nudge');
+  const hasKey = !!getApiKey();
+  if (card) card.classList.toggle('locked', !hasKey);
+  if (nudge) nudge.style.display = hasKey ? 'none' : '';
+}
 
 // ── VIEWS ──────────────────────────────────────────────────
 function showView(v) {
-  ['today', 'history', 'meals'].forEach(n => {
+  ['today', 'history', 'meals', 'settings'].forEach(n => {
     document.getElementById('view-' + n).style.display = n === v ? 'flex' : 'none';
   });
   document.querySelectorAll('.nav-btn').forEach((b, i) => {
@@ -719,6 +1271,138 @@ function showView(v) {
   });
   if (v === 'history') renderHistory();
   if (v === 'meals') renderMealsView();
+  if (v === 'settings') refreshSettingsBadges();
+}
+
+function refreshSettingsBadges() {
+  const g = loadGoal();
+  const sub = document.getElementById('settings-goal-sub');
+  if (sub) sub.textContent = g.low + '–' + g.high + 'g / day';
+  const badge = document.getElementById('settings-key-badge');
+  const hasKey = !!getApiKey();
+  if (badge) {
+    badge.textContent = hasKey ? 'Set ✓' : 'Not set';
+    badge.classList.toggle('warn', !hasKey);
+  }
+}
+
+function openSettingsPanel(name) {
+  const panel = document.getElementById('panel-' + name);
+  if (!panel) return;
+  if (name === 'apikey') {
+    const key = getApiKey();
+    document.getElementById('s-api-key').value = key || '';
+    const removeBtn = document.getElementById('s-remove-key');
+    if (removeBtn) removeBtn.style.display = key ? '' : 'none';
+  }
+  if (name === 'goal') {
+    const g = loadGoal();
+    document.getElementById('settings-goal-val').textContent = g.low + '–' + g.high + 'g / day';
+    document.getElementById('settings-goal-note').textContent = 'Current goal';
+  }
+  if (name === 'backup') {
+    document.getElementById('settings-export-text').value = buildExportText();
+  }
+  panel.classList.add('open');
+}
+
+function closeSettingsPanel(name) {
+  document.getElementById('panel-' + name).classList.remove('open');
+}
+
+function saveApiKeyFromSettings() {
+  const key = document.getElementById('s-api-key').value.trim();
+  if (key && !key.startsWith('sk-ant-')) { showToast('Key should start with sk-ant-…'); return; }
+  if (!key) { showToast('Enter a key or use Remove'); return; }
+  localStorage.setItem('protein_api_key', key);
+  updateKeyIndicator();
+  updateAICardState();
+  refreshSettingsBadges();
+  closeSettingsPanel('apikey');
+  showToast('API key saved ✓');
+}
+
+function removeApiKey() {
+  localStorage.removeItem('protein_api_key');
+  document.getElementById('s-api-key').value = '';
+  document.getElementById('s-remove-key').style.display = 'none';
+  updateKeyIndicator();
+  updateAICardState();
+  refreshSettingsBadges();
+  showToast('API key removed');
+}
+
+function settingsCalcGoal() {
+  const weightRaw = parseFloat(document.getElementById('s-weight').value);
+  const unit = document.getElementById('s-unit').value;
+  const activity = document.getElementById('s-activity').value;
+  const goalType = document.getElementById('s-goaltype').value;
+  const weightLbs = unit === 'kg' ? weightRaw * 2.205 : weightRaw;
+  const saveBtn = document.getElementById('s-calc-save');
+  if (!weightLbs || isNaN(weightLbs)) { if (saveBtn) saveBtn.style.display = 'none'; return; }
+  const actMult = { sedentary: 0.7, moderate: 0.8, active: 0.9, athlete: 1.0 }[activity];
+  const goalMult = { build: 0.1, lose: 0.05, maintain: 0.0 }[goalType];
+  const mult = Math.min(actMult + goalMult, 1.0);
+  const target = Math.round(weightLbs * mult);
+  const low = Math.round(target * 0.93);
+  const high = Math.round(target * 1.07);
+  window._settingsCalcGoal = { target, low, high };
+  document.getElementById('settings-goal-val').textContent = low + '–' + high + 'g / day';
+  document.getElementById('settings-goal-note').textContent = `Calculated: ${Math.round(weightLbs)}lbs · ${activity} · ${goalType} (${mult.toFixed(1)}g/lb)`;
+  if (saveBtn) saveBtn.style.display = '';
+}
+
+function saveCalcGoalFromSettings() {
+  if (!window._settingsCalcGoal) return;
+  saveGoalData(window._settingsCalcGoal);
+  updateGoalDisplay(); updateRing(); refreshSettingsBadges();
+  closeSettingsPanel('goal');
+  showToast('Goal updated ✓');
+}
+
+function saveManualGoalFromSettings() {
+  const v = Math.round(parseFloat(document.getElementById('s-manual-goal').value));
+  if (isNaN(v) || v <= 0) { showToast('Enter a valid number'); return; }
+  const goal = { target: v, low: Math.round(v * 0.93), high: Math.round(v * 1.07) };
+  saveGoalData(goal);
+  updateGoalDisplay(); updateRing(); refreshSettingsBadges();
+  closeSettingsPanel('goal');
+  showToast('Goal updated ✓');
+}
+
+function settingsCopyExport() {
+  const text = document.getElementById('settings-export-text').value;
+  if (navigator.clipboard) navigator.clipboard.writeText(text).then(() => showToast('Copied ✓'));
+  else { document.getElementById('settings-export-text').select(); document.execCommand('copy'); showToast('Copied ✓'); }
+}
+
+function settingsShareExport() {
+  const text = document.getElementById('settings-export-text').value;
+  if (navigator.share) navigator.share({ title: 'Protein Tracker Backup', text });
+  else { settingsCopyExport(); }
+}
+
+function settingsDoImport() {
+  const raw = document.getElementById('settings-import-text').value.trim();
+  try {
+    const jsonMatch = raw.match(/── RAW JSON \(for restore\) ──\s*([\s\S]+)/);
+    const jsonStr = jsonMatch ? jsonMatch[1].trim() : raw;
+    const parsed = JSON.parse(jsonStr);
+    if (!parsed.log && !parsed.meals) throw new Error('Invalid');
+    if (parsed.log) {
+      const current = loadData();
+      Object.keys(parsed.log).forEach(k => { if (!current[k]) current[k] = parsed.log[k]; });
+      saveData(current);
+    }
+    if (parsed.meals?.length) {
+      const cm = loadMeals(); const ex = new Set(cm.map(m => m.name));
+      parsed.meals.forEach(m => { if (!ex.has(m.name)) cm.push(m); });
+      saveMeals(cm);
+    }
+    document.getElementById('settings-import-text').value = '';
+    renderHistory(); renderMealsView(); renderSavedMealsChips(); renderTodayEntries();
+    showToast('Data restored ✓');
+  } catch(e) { showToast('Invalid data — check your paste'); }
 }
 
 // ── RING ───────────────────────────────────────────────────
@@ -727,17 +1411,18 @@ function updateRing() {
   const entries = data[key]?.entries || [];
   const total = entries.reduce((s, e) => s + e.protein, 0);
   const hasApprox = entries.some(e => e.approx);
-  const pct = Math.min(total / GOAL, 1);
+  const g = loadGoal();
+  const pct = Math.min(total / g.target, 1);
   const offset = CIRCUMFERENCE - pct * CIRCUMFERENCE;
   const fill = document.getElementById('ring-fill');
   fill.style.strokeDashoffset = offset;
-  // Color change near goal
-  fill.style.stroke = total >= GOAL_LOW ? '#2D5016' : (total >= GOAL * 0.6 ? '#5A8A30' : '#8AB860');
+  fill.style.stroke = total >= g.low ? '#2D5016' : (total >= g.target * 0.6 ? '#5A8A30' : '#8AB860');
   document.getElementById('ring-grams').textContent = (hasApprox ? '~' : '') + Math.round(total);
   document.getElementById('ring-approx').textContent = hasApprox ? 'estimated' : '';
-  document.getElementById('stat-remaining').textContent = Math.max(0, GOAL_LOW - Math.round(total)) + 'g';
+  document.getElementById('stat-remaining').textContent = Math.max(0, g.low - Math.round(total)) + 'g';
   document.getElementById('stat-entries').textContent = entries.length;
   document.getElementById('stat-pct').textContent = Math.round(pct * 100) + '%';
+  updateGoalDisplay();
 }
 
 // ── QUICK ADDS RENDER ──────────────────────────────────────
@@ -746,7 +1431,7 @@ let quickEditMode = false;
 function renderQuickAdds() {
   const adds = loadQuickAdds();
   const panel = document.getElementById('panel-quick');
-  const editBtn = document.getElementById('quick-edit-btn');
+  const editBtn = document.getElementById('qa-section-edit-btn');
   if (editBtn) editBtn.textContent = quickEditMode ? 'Done' : 'Edit';
 
   if (!adds.length && !quickEditMode) {
@@ -928,6 +1613,178 @@ function renderTodayEntries() {
       </div>
     </div>
   `).join('');
+}
+
+// ── MANUAL ENTRY ──────────────────────────────────────────
+function manualLog() {
+  const name = document.getElementById('manual-name').value.trim();
+  const g = parseFloat(document.getElementById('manual-g').value);
+  if (!name || isNaN(g) || g <= 0) { showToast('Enter a food name and grams'); return; }
+  addEntry({ name, protein: Math.round(g), approx: false, source: 'manual' });
+  document.getElementById('manual-name').value = '';
+  document.getElementById('manual-g').value = '';
+}
+
+// ── ONBOARDING ────────────────────────────────────────────
+const ALL_QA_OPTIONS = [
+  { emoji: '🍗', name: 'Chicken Breast', portion: '~4 oz cooked', protein: 35, approx: true },
+  { emoji: '🥛', name: 'Greek Yogurt', portion: '1 cup', protein: 17, approx: true },
+  { emoji: '🥤', name: 'Protein Shake', portion: '1 scoop', protein: 25, approx: false },
+  { emoji: '🍫', name: 'Protein Bar', portion: '1 bar', protein: 20, approx: true },
+  { emoji: '🥚', name: 'Eggs', portion: '2 eggs', protein: 12, approx: false },
+  { emoji: '🫙', name: 'Cottage Cheese', portion: '1 cup', protein: 25, approx: false },
+  { emoji: '🥜', name: 'Peanut Butter', portion: '2 tbsp', protein: 8, approx: false },
+  { emoji: '🦌', name: 'Venison', portion: '~4 oz cooked', protein: 34, approx: true },
+  { emoji: '🥩', name: 'Ground Beef', portion: '~4 oz cooked', protein: 28, approx: true },
+  { emoji: '🐟', name: 'Tuna', portion: '1 can (5 oz)', protein: 27, approx: false },
+  { emoji: '🌰', name: 'Mixed Nuts', portion: '1 oz handful', protein: 6, approx: false },
+  { emoji: '🧀', name: 'Cottage Cheese', portion: '½ cup', protein: 13, approx: false },
+];
+
+// Remove duplicate cottage cheese — keep unique foods only
+const _seen = new Set();
+const ALL_QA_UNIQUE = ALL_QA_OPTIONS.filter(q => {
+  if (_seen.has(q.name)) return false;
+  _seen.add(q.name);
+  return true;
+});
+
+let obGoalMethod = null;
+let obActivity = null;
+let obGoalType = null;
+let obSelectedQA = new Set([0, 1, 2, 4]); // defaults: chicken, yogurt, shake, eggs
+
+function showOnboarding() {
+  document.getElementById('onboard-screen').classList.remove('hidden');
+  renderQAOnboardChips();
+}
+
+function renderQAOnboardChips() {
+  const grid = document.getElementById('qa-onboard-chips');
+  if (!grid) return;
+  grid.innerHTML = ALL_QA_UNIQUE.map((q, i) => `
+    <button class="qa-chip-toggle ${obSelectedQA.has(i) ? 'selected' : ''}" onclick="toggleQAChip(${i})">
+      <span>${q.emoji}</span>
+      <span>${q.name} <span style="font-size:11px;opacity:0.7">${q.portion}</span></span>
+      <span class="qa-chip-protein" style="color:${obSelectedQA.has(i) ? 'var(--accent)' : 'var(--text-muted)'}">${q.approx?'~':''}${q.protein}g</span>
+    </button>
+  `).join('');
+}
+
+function toggleQAChip(i) {
+  if (obSelectedQA.has(i)) obSelectedQA.delete(i); else obSelectedQA.add(i);
+  renderQAOnboardChips();
+}
+
+function selectGoalMethod(method) {
+  obGoalMethod = method;
+  document.getElementById('opt-calculate').classList.toggle('selected', method === 'calculate');
+  document.getElementById('opt-manual').classList.toggle('selected', method === 'manual');
+  document.getElementById('calc-form').style.display = method === 'calculate' ? 'flex' : 'none';
+  document.getElementById('manual-form').style.display = method === 'manual' ? 'flex' : 'none';
+  checkStep1Ready();
+}
+
+function selectActivity(level) {
+  obActivity = level;
+  ['sedentary','moderate','active','athlete'].forEach(l => {
+    document.getElementById('act-'+l).classList.toggle('selected', l === level);
+  });
+  calcGoal();
+}
+
+function selectGoalType(type) {
+  obGoalType = type;
+  ['build','lose','maintain'].forEach(t => {
+    document.getElementById('goal-'+t).classList.toggle('selected', t === type);
+  });
+  calcGoal();
+}
+
+function calcGoal() {
+  const weightRaw = parseFloat(document.getElementById('ob-weight')?.value);
+  const unit = document.getElementById('ob-unit')?.value || 'lbs';
+  const weightLbs = unit === 'kg' ? weightRaw * 2.205 : weightRaw;
+  if (!weightLbs || !obActivity || !obGoalType) {
+    document.getElementById('calc-result').classList.remove('visible');
+    checkStep1Ready();
+    return;
+  }
+  // Multiplier: activity + goal
+  const actMult = { sedentary: 0.7, moderate: 0.8, active: 0.9, athlete: 1.0 }[obActivity];
+  const goalMult = { build: 0.1, lose: 0.05, maintain: 0.0 }[obGoalType];
+  const mult = Math.min(actMult + goalMult, 1.0);
+  const target = Math.round(weightLbs * mult);
+  const low = Math.round(target * 0.93);
+  const high = Math.round(target * 1.07);
+  window._calcGoalResult = { target, low, high };
+  const el = document.getElementById('calc-result');
+  el.classList.add('visible');
+  document.getElementById('calc-result-val').textContent = low + '–' + high + 'g / day';
+  document.getElementById('calc-result-note').textContent =
+    `Based on ${Math.round(weightLbs)} lbs · ${obActivity} · ${obGoalType === 'build' ? 'muscle building' : obGoalType === 'lose' ? 'fat loss' : 'maintenance'} (${mult.toFixed(1)}g/lb)`;
+  checkStep1Ready();
+}
+
+function checkStep1Ready() {
+  const btn = document.getElementById('ob-next-1');
+  if (!btn) return;
+  let ready = false;
+  if (obGoalMethod === 'calculate' && window._calcGoalResult) ready = true;
+  if (obGoalMethod === 'manual') {
+    const v = parseFloat(document.getElementById('ob-manual-goal')?.value);
+    ready = !isNaN(v) && v > 0;
+  }
+  btn.disabled = !ready;
+}
+
+// Wire manual goal input
+document.addEventListener('DOMContentLoaded', () => {
+  const mg = document.getElementById('ob-manual-goal');
+  if (mg) mg.addEventListener('input', checkStep1Ready);
+});
+
+function isSafariIOS() {
+  const ua = navigator.userAgent;
+  return /iP(hone|od|ad)/.test(ua) && /Safari/.test(ua) && !/CriOS|FxiOS|OPiOS|mercury/.test(ua);
+}
+
+function onboardNext(step) {
+  // Skip home screen step if not Safari iOS
+  if (step === 3 && !isSafariIOS()) { onboardFinish(); return; }
+  document.querySelectorAll('.onboard-step').forEach(s => s.classList.remove('active'));
+  document.getElementById('onboard-step-' + step).classList.add('active');
+  document.querySelectorAll('.onboard-dot').forEach((d,i) => d.classList.toggle('active', i < step));
+}
+
+function onboardBack(step) {
+  document.querySelectorAll('.onboard-step').forEach(s => s.classList.remove('active'));
+  document.getElementById('onboard-step-' + step).classList.add('active');
+  document.querySelectorAll('.onboard-dot').forEach((d,i) => d.classList.toggle('active', i < step));
+}
+
+function onboardFinish() {
+  // Save goal
+  let goal;
+  if (obGoalMethod === 'calculate' && window._calcGoalResult) {
+    goal = window._calcGoalResult;
+  } else {
+    const v = Math.round(parseFloat(document.getElementById('ob-manual-goal').value));
+    goal = { target: v, low: Math.round(v * 0.93), high: Math.round(v * 1.07) };
+  }
+  saveGoalData(goal);
+
+  // Save selected quick-adds
+  const selected = [...obSelectedQA].map(i => ALL_QA_UNIQUE[i]);
+  saveQuickAdds(selected);
+
+  localStorage.setItem('protein_onboarded', 'true');
+  document.getElementById('onboard-screen').classList.add('hidden');
+  updateGoalDisplay();
+  renderQuickAdds();
+  renderSavedMealsChips();
+  renderMealsView();
+  updateRing();
 }
 
 // ── AI LOG ─────────────────────────────────────────────────
@@ -1258,37 +2115,10 @@ function buildExportText() {
   return lines.join('\n');
 }
 
-function toggleExport() {
-  const panel = document.getElementById('export-panel');
-  const chevron = document.getElementById('export-chevron');
-  const isOpen = panel.classList.toggle('open');
-  chevron.textContent = isOpen ? '▲' : '▼';
-  if (isOpen) {
-    document.getElementById('export-text').value = buildExportText();
-  }
-}
-
-function copyExport() {
-  const text = document.getElementById('export-text').value;
-  if (navigator.clipboard) {
-    navigator.clipboard.writeText(text).then(() => showToast('Copied to clipboard ✓'));
-  } else {
-    const ta = document.getElementById('export-text');
-    ta.select();
-    document.execCommand('copy');
-    showToast('Copied ✓');
-  }
-}
-
-function shareExport() {
-  const text = document.getElementById('export-text').value;
-  if (navigator.share) {
-    navigator.share({ title: 'Protein Tracker Backup', text });
-  } else {
-    copyExport();
-    showToast('Copied — paste into Notes or email');
-  }
-}
+// Export/backup now lives in Settings → Export & Backup
+function toggleExport() { showView('settings'); openSettingsPanel('backup'); }
+function copyExport() { settingsCopyExport(); }
+function shareExport() { settingsShareExport(); }
 
 function importPrompt() {
   document.getElementById('import-overlay').classList.add('open');
@@ -1335,6 +2165,58 @@ function doImport() {
   } catch (e) {
     showToast('Invalid data — check your paste');
   }
+}
+
+// ── CLEAR DATA ────────────────────────────────────────────
+function promptClear(type) {
+  if (type === 'logs') {
+    document.getElementById('confirm-logs-wrap').style.display = 'flex';
+    document.getElementById('clear-logs-btn').style.display = 'none';
+  } else {
+    document.getElementById('confirm-reset-wrap').style.display = 'flex';
+    document.getElementById('clear-reset-btn').style.display = 'none';
+  }
+}
+
+function cancelClear(type) {
+  if (type === 'logs') {
+    document.getElementById('confirm-logs-wrap').style.display = 'none';
+    document.getElementById('clear-logs-btn').style.display = '';
+  } else {
+    document.getElementById('confirm-reset-wrap').style.display = 'none';
+    document.getElementById('clear-reset-btn').style.display = '';
+  }
+}
+
+function confirmClearLogs() {
+  localStorage.removeItem('protein_data');
+  closeSettingsPanel('cleardata');
+  renderTodayEntries();
+  renderHistory();
+  updateRing();
+  showToast('Logs cleared');
+}
+
+function confirmFullReset() {
+  // Wipe all app data
+  ['protein_data','protein_meals','protein_quick_adds','protein_goal',
+   'protein_api_key','protein_api_key_skipped','protein_onboarded'].forEach(k => {
+    localStorage.removeItem(k);
+  });
+  // Reset UI state
+  closeSettingsPanel('cleardata');
+  showView('today');
+  // Re-init
+  updateRing();
+  renderTodayEntries();
+  renderHistory();
+  renderMealsView();
+  renderQuickAdds();
+  renderSavedMealsChips();
+  updateGoalDisplay();
+  updateAICardState();
+  // Show onboarding
+  setTimeout(() => showOnboarding(), 100);
 }
 
 // ── TOAST ──────────────────────────────────────────────────
