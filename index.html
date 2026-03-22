@@ -1,0 +1,1349 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="default">
+<title>Protein</title>
+<link href="https://fonts.googleapis.com/css2?family=DM+Serif+Display:ital@0;1&family=DM+Sans:wght@300;400;500&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --bg: #F7F5F0;
+    --surface: #FFFFFF;
+    --border: #E8E4DC;
+    --text: #1A1814;
+    --text-muted: #8A8680;
+    --accent: #2D5016;
+    --accent-light: #E8F0E0;
+    --accent-mid: #5A8A30;
+    --warn: #C0392B;
+    --warn-light: #FDF0EF;
+    --approx: #7A6A50;
+    --radius: 16px;
+    --radius-sm: 10px;
+  }
+  * { box-sizing: border-box; margin: 0; padding: 0; -webkit-tap-highlight-color: transparent; }
+  html, body { height: 100%; background: var(--bg); font-family: 'DM Sans', sans-serif; color: var(--text); overflow-x: hidden; }
+
+  body { display: flex; flex-direction: column; max-width: 430px; margin: 0 auto; min-height: 100dvh; }
+
+  /* API KEY SETUP SCREEN */
+  .setup-screen {
+    position: fixed; inset: 0; background: var(--bg); z-index: 500;
+    display: flex; flex-direction: column; align-items: center; justify-content: center;
+    padding: 32px 28px; max-width: 430px; margin: 0 auto;
+  }
+  .setup-screen.hidden { display: none; }
+  .setup-logo { font-family: 'DM Serif Display', serif; font-size: 36px; margin-bottom: 8px; letter-spacing: -0.5px; }
+  .setup-sub { font-size: 14px; color: var(--text-muted); margin-bottom: 40px; text-align: center; line-height: 1.5; }
+  .setup-label { font-size: 11px; font-weight: 500; color: var(--text-muted); text-transform: uppercase; letter-spacing: 0.8px; margin-bottom: 8px; align-self: flex-start; }
+  .setup-input {
+    width: 100%; border: 1.5px solid var(--border); border-radius: var(--radius-sm);
+    padding: 14px 16px; font-family: 'DM Sans', sans-serif; font-size: 15px;
+    color: var(--text); background: var(--surface); outline: none; margin-bottom: 10px;
+    letter-spacing: 0.5px;
+  }
+  .setup-input:focus { border-color: var(--accent); }
+  .setup-save-btn {
+    width: 100%; background: var(--accent); color: white; border: none;
+    border-radius: var(--radius-sm); padding: 16px; font-size: 16px; font-weight: 500;
+    font-family: 'DM Sans', sans-serif; cursor: pointer; margin-bottom: 16px;
+    transition: opacity 0.15s;
+  }
+  .setup-save-btn:active { opacity: 0.8; }
+  .setup-hint { font-size: 13px; color: var(--text-muted); text-align: center; line-height: 1.6; }
+  .setup-hint a { color: var(--accent); text-decoration: none; }
+  .setup-hint a:active { opacity: 0.7; }
+  .setup-divider { width: 100%; height: 1px; background: var(--border); margin: 28px 0; }
+  .key-indicator {
+    display: flex; align-items: center; gap: 8px; font-size: 13px; cursor: pointer;
+  }
+  .key-dot { width: 8px; height: 8px; border-radius: 50%; background: var(--accent-mid); flex-shrink: 0; }
+  .key-dot.missing { background: var(--border); }
+  .key-manage { font-size: 12px; color: var(--text-muted); text-decoration: underline; cursor: pointer; background: none; border: none; font-family: 'DM Sans', sans-serif; padding: 0; }
+
+  /* HEADER */
+  .header {
+    padding: 16px 20px 12px;
+    background: var(--bg);
+    position: sticky; top: 0; z-index: 10;
+    border-bottom: 1px solid var(--border);
+    display: flex; align-items: center; justify-content: space-between;
+  }
+  .header-title { font-family: 'DM Serif Display', serif; font-size: 22px; letter-spacing: -0.3px; }
+  .header-date { font-size: 12px; color: var(--text-muted); font-weight: 300; margin-top: 1px; }
+  .header-nav { display: flex; gap: 4px; }
+  .nav-btn {
+    padding: 8px 14px; border-radius: 20px; border: 1.5px solid var(--border);
+    background: transparent; font-family: 'DM Sans', sans-serif; font-size: 13px;
+    font-weight: 500; color: var(--text-muted); cursor: pointer; transition: all 0.15s;
+  }
+  .nav-btn.active { background: var(--text); color: white; border-color: var(--text); }
+
+  /* SCROLL AREA */
+  .scroll-area { flex: 1; overflow-y: auto; -webkit-overflow-scrolling: touch; padding-bottom: 40px; }
+
+  /* TODAY VIEW */
+  #view-today { padding: 20px; display: flex; flex-direction: column; gap: 20px; }
+  #view-history { padding: 20px; display: none; flex-direction: column; gap: 16px; }
+  #view-meals { padding: 20px; display: none; flex-direction: column; gap: 16px; }
+
+  /* RING CARD */
+  .ring-card {
+    background: var(--surface); border-radius: var(--radius);
+    padding: 24px 20px 20px; border: 1px solid var(--border);
+    display: flex; flex-direction: column; align-items: center; gap: 16px;
+  }
+  .ring-wrap { position: relative; width: 160px; height: 160px; }
+  .ring-wrap svg { transform: rotate(-90deg); }
+  .ring-bg { fill: none; stroke: var(--border); stroke-width: 10; }
+  .ring-fill { fill: none; stroke: var(--accent); stroke-width: 10; stroke-linecap: round; transition: stroke-dashoffset 0.6s cubic-bezier(.4,0,.2,1); }
+  .ring-center {
+    position: absolute; inset: 0; display: flex; flex-direction: column;
+    align-items: center; justify-content: center; gap: 2px;
+  }
+  .ring-grams { font-family: 'DM Serif Display', serif; font-size: 38px; line-height: 1; letter-spacing: -1px; }
+  .ring-label { font-size: 11px; color: var(--text-muted); font-weight: 400; letter-spacing: 0.5px; text-transform: uppercase; }
+  .ring-approx { font-size: 11px; color: var(--approx); }
+  .ring-stats { display: flex; gap: 24px; }
+  .ring-stat { text-align: center; }
+  .ring-stat-val { font-size: 18px; font-weight: 500; }
+  .ring-stat-lbl { font-size: 11px; color: var(--text-muted); margin-top: 2px; }
+  .goal-range { font-size: 13px; color: var(--text-muted); }
+  .goal-range span { color: var(--accent); font-weight: 500; }
+
+  /* LOG INPUT */
+  .log-card { background: var(--surface); border-radius: var(--radius); border: 1px solid var(--border); overflow: hidden; }
+  .log-input-wrap { display: flex; align-items: flex-end; gap: 10px; padding: 14px 14px 12px; }
+  .log-input {
+    flex: 1; border: none; outline: none; background: var(--bg);
+    border-radius: var(--radius-sm); padding: 12px 14px;
+    font-family: 'DM Sans', sans-serif; font-size: 16px; color: var(--text);
+    resize: none; line-height: 1.4; min-height: 48px; max-height: 120px;
+  }
+  .log-input::placeholder { color: var(--text-muted); }
+  .log-btn {
+    background: var(--accent); color: white; border: none;
+    border-radius: var(--radius-sm); padding: 12px 18px;
+    font-family: 'DM Sans', sans-serif; font-size: 15px; font-weight: 500;
+    cursor: pointer; white-space: nowrap; height: 48px; transition: opacity 0.15s;
+    flex-shrink: 0;
+  }
+  .log-btn:active { opacity: 0.8; }
+  .log-btn:disabled { opacity: 0.4; }
+
+  /* SHORTCUTS */
+  .shortcuts-tabs { display: flex; border-top: 1px solid var(--border); }
+  .shortcut-tab {
+    flex: 1; padding: 10px; font-size: 12px; font-weight: 500; color: var(--text-muted);
+    text-align: center; cursor: pointer; border-bottom: 2px solid transparent;
+    transition: all 0.15s; letter-spacing: 0.3px; text-transform: uppercase;
+  }
+  .shortcut-tab.active { color: var(--accent); border-bottom-color: var(--accent); }
+  .shortcuts-panel { display: none; padding: 12px; flex-wrap: wrap; gap: 8px; }
+  .shortcuts-panel.active { display: flex; }
+  .shortcut-chip {
+    display: flex; align-items: center; gap: 6px;
+    background: var(--bg); border: 1px solid var(--border);
+    border-radius: 20px; padding: 8px 12px;
+    font-size: 13px; cursor: pointer; transition: all 0.15s; color: var(--text);
+    font-family: 'DM Sans', sans-serif;
+  }
+  .shortcut-chip:active { background: var(--accent-light); border-color: var(--accent); }
+  .shortcut-chip .chip-protein { color: var(--accent-mid); font-weight: 500; font-size: 12px; }
+  .shortcut-chip .chip-approx { color: var(--approx); }
+
+  /* AI FOLLOWUP */
+  .ai-bubble {
+    background: var(--accent-light); border: 1px solid #C5DDA8;
+    border-radius: var(--radius); padding: 14px 16px; display: none; flex-direction: column; gap: 10px;
+  }
+  .ai-bubble.visible { display: flex; }
+  .ai-bubble-text { font-size: 15px; line-height: 1.5; }
+  .ai-bubble-text strong { font-weight: 500; }
+  .ai-options { display: flex; flex-wrap: wrap; gap: 8px; }
+  .ai-option {
+    background: white; border: 1px solid #C5DDA8; border-radius: 20px;
+    padding: 8px 14px; font-size: 13px; font-weight: 500; cursor: pointer;
+    transition: all 0.15s; font-family: 'DM Sans', sans-serif; color: var(--text);
+  }
+  .ai-option:active { background: var(--accent); color: white; border-color: var(--accent); }
+  .ai-loading { display: flex; align-items: center; gap: 8px; color: var(--text-muted); font-size: 14px; }
+  .ai-dots { display: flex; gap: 4px; }
+  .ai-dot { width: 6px; height: 6px; border-radius: 50%; background: var(--accent-mid); animation: pulse 1.2s infinite; }
+  .ai-dot:nth-child(2) { animation-delay: 0.2s; }
+  .ai-dot:nth-child(3) { animation-delay: 0.4s; }
+  @keyframes pulse { 0%,80%,100% { opacity: 0.3; } 40% { opacity: 1; } }
+
+  /* LOG ENTRIES */
+  .log-entries { display: flex; flex-direction: column; gap: 1px; }
+  .log-entry {
+    background: var(--surface); border: 1px solid var(--border);
+    border-radius: var(--radius-sm); padding: 12px 14px;
+    display: flex; align-items: center; justify-content: space-between;
+    animation: slideIn 0.2s ease;
+  }
+  @keyframes slideIn { from { opacity: 0; transform: translateY(-6px); } to { opacity: 1; transform: translateY(0); } }
+  .entry-left { flex: 1; }
+  .entry-name { font-size: 15px; font-weight: 400; }
+  .entry-meta { font-size: 12px; color: var(--text-muted); margin-top: 2px; }
+  .entry-right { display: flex; align-items: center; gap: 10px; }
+  .entry-protein { font-size: 17px; font-weight: 500; }
+  .entry-approx { color: var(--approx); }
+  .entry-delete {
+    background: none; border: none; color: var(--text-muted); font-size: 18px;
+    cursor: pointer; padding: 4px 6px; border-radius: 6px; line-height: 1;
+  }
+  .entry-delete:active { background: var(--warn-light); color: var(--warn); }
+  .empty-state { text-align: center; padding: 32px 20px; color: var(--text-muted); font-size: 15px; line-height: 1.6; }
+  .empty-state .empty-icon { font-size: 32px; margin-bottom: 8px; }
+
+  /* SECTION LABEL */
+  .section-label { font-size: 11px; font-weight: 500; color: var(--text-muted); text-transform: uppercase; letter-spacing: 0.8px; padding: 0 2px; }
+
+  /* EXPORT */
+  .export-btn {
+    width: 100%; background: var(--surface); border: 1.5px solid var(--border);
+    border-radius: var(--radius-sm); padding: 14px 16px;
+    font-family: 'DM Sans', sans-serif; font-size: 14px; font-weight: 500;
+    color: var(--text-muted); cursor: pointer; text-align: left;
+    display: flex; align-items: center; justify-content: space-between;
+    transition: all 0.15s;
+  }
+  .export-btn:active { border-color: var(--accent); color: var(--accent); }
+  .export-panel {
+    background: var(--surface); border: 1.5px solid var(--border);
+    border-radius: var(--radius); overflow: hidden; display: none;
+  }
+  .export-panel.open { display: block; }
+  .export-textarea {
+    width: 100%; border: none; outline: none; padding: 14px 16px;
+    font-family: 'DM Sans', sans-serif; font-size: 13px; color: var(--text);
+    background: var(--bg); resize: none; line-height: 1.6;
+    border-bottom: 1px solid var(--border);
+  }
+  .export-actions { display: flex; gap: 1px; background: var(--border); }
+  .export-action-btn {
+    flex: 1; background: var(--surface); border: none; padding: 14px 10px;
+    font-family: 'DM Sans', sans-serif; font-size: 13px; font-weight: 500;
+    color: var(--accent); cursor: pointer; transition: background 0.15s;
+  }
+  .export-action-btn:active { background: var(--accent-light); }
+
+  /* HISTORY VIEW */
+  .history-day {
+    background: var(--surface); border: 1px solid var(--border);
+    border-radius: var(--radius); overflow: hidden;
+  }
+  .history-day-header {
+    padding: 14px 16px; display: flex; justify-content: space-between; align-items: center;
+    cursor: pointer;
+  }
+  .history-day-date { font-weight: 500; font-size: 15px; }
+  .history-day-total { font-size: 15px; }
+  .history-day-bar { height: 4px; background: var(--border); margin: 0 16px 14px; border-radius: 2px; overflow: hidden; }
+  .history-day-bar-fill { height: 100%; background: var(--accent); border-radius: 2px; transition: width 0.4s ease; }
+  .history-day-entries { padding: 0 16px 14px; display: none; flex-direction: column; gap: 6px; }
+  .history-day-entries.open { display: flex; }
+  .history-entry-row { display: flex; justify-content: space-between; font-size: 14px; color: var(--text-muted); }
+
+  /* COLLAPSIBLE SECTIONS */
+  .collapsible-section {
+    background: var(--surface); border: 1px solid var(--border);
+    border-radius: var(--radius); overflow: hidden;
+  }
+  .collapsible-header {
+    padding: 14px 16px; display: flex; align-items: center; justify-content: space-between;
+    cursor: pointer; user-select: none;
+  }
+  .collapsible-title {
+    display: flex; align-items: center; gap: 8px;
+    font-size: 13px; font-weight: 500; color: var(--text-muted);
+    text-transform: uppercase; letter-spacing: 0.8px;
+  }
+  .collapsible-icon { font-size: 14px; color: var(--text-muted); transition: transform 0.2s; display: inline-block; }
+  .collapsible-icon.closed { transform: rotate(-90deg); }
+  .collapsible-body { padding: 0 12px 12px; display: flex; flex-direction: column; gap: 8px; }
+  .collapsible-body.closed { display: none; }
+  .section-edit-btn {
+    background: none; border: 1px solid var(--border); border-radius: 12px;
+    padding: 4px 12px; font-size: 12px; font-weight: 500; color: var(--text-muted);
+    cursor: pointer; font-family: 'DM Sans', sans-serif; transition: all 0.15s;
+  }
+  .section-edit-btn.active { background: var(--accent-light); color: var(--accent); border-color: var(--accent); }
+  .section-edit-btn:active { background: var(--accent-light); }
+  .chip-grid { display: flex; flex-wrap: wrap; gap: 8px; padding-top: 4px; }
+
+  /* MEALS VIEW */
+  .meal-card {
+    background: var(--surface); border: 1px solid var(--border);
+    border-radius: var(--radius); padding: 16px;
+    display: flex; align-items: center; justify-content: space-between;
+  }
+  .meal-left { display: flex; align-items: center; gap: 12px; }
+  .meal-emoji { font-size: 28px; }
+  .meal-name { font-size: 16px; font-weight: 500; }
+  .meal-items { font-size: 13px; color: var(--text-muted); margin-top: 2px; }
+  .meal-right { display: flex; align-items: center; gap: 10px; }
+  .meal-protein { font-size: 18px; font-weight: 500; color: var(--accent); }
+  .meal-log-btn {
+    background: var(--accent-light); border: 1px solid #C5DDA8; color: var(--accent);
+    border-radius: 20px; padding: 8px 14px; font-size: 13px; font-weight: 500;
+    cursor: pointer; font-family: 'DM Sans', sans-serif; transition: all 0.15s;
+  }
+  .meal-log-btn:active { background: var(--accent); color: white; }
+  .meal-delete-btn {
+    background: none; border: none; color: var(--text-muted); font-size: 18px;
+    cursor: pointer; padding: 4px;
+  }
+
+  .add-meal-btn {
+    background: var(--surface); border: 2px dashed var(--border);
+    border-radius: var(--radius); padding: 18px; text-align: center;
+    font-size: 15px; color: var(--text-muted); cursor: pointer;
+    font-family: 'DM Sans', sans-serif; transition: all 0.15s;
+  }
+  .add-meal-btn:active { border-color: var(--accent); color: var(--accent); }
+
+  /* MODAL */
+  .modal-overlay {
+    position: fixed; inset: 0; background: rgba(0,0,0,0.4);
+    z-index: 100; display: none; align-items: flex-end; justify-content: center;
+    backdrop-filter: blur(2px);
+  }
+  .modal-overlay.open { display: flex; }
+  .modal {
+    background: var(--surface); border-radius: 20px 20px 0 0;
+    padding: 24px 20px 40px; width: 100%; max-width: 430px;
+    max-height: 80dvh; overflow-y: auto;
+    animation: slideUp 0.25s ease;
+  }
+  @keyframes slideUp { from { transform: translateY(100%); } to { transform: translateY(0); } }
+  .modal-title { font-family: 'DM Serif Display', serif; font-size: 22px; margin-bottom: 20px; }
+  .modal-field { margin-bottom: 16px; }
+  .modal-label { font-size: 13px; font-weight: 500; color: var(--text-muted); margin-bottom: 6px; text-transform: uppercase; letter-spacing: 0.3px; }
+  .modal-input {
+    width: 100%; border: 1.5px solid var(--border); border-radius: var(--radius-sm);
+    padding: 12px 14px; font-family: 'DM Sans', sans-serif; font-size: 16px;
+    color: var(--text); background: var(--bg); outline: none;
+  }
+  .modal-input:focus { border-color: var(--accent); }
+  .modal-row { display: flex; gap: 10px; }
+  .modal-row .modal-field { flex: 1; }
+  .modal-save-btn {
+    width: 100%; background: var(--accent); color: white; border: none;
+    border-radius: var(--radius-sm); padding: 16px; font-size: 16px; font-weight: 500;
+    font-family: 'DM Sans', sans-serif; cursor: pointer; margin-top: 8px;
+    transition: opacity 0.15s;
+  }
+  .modal-save-btn:active { opacity: 0.8; }
+  .modal-cancel { width: 100%; background: none; border: none; padding: 12px;
+    font-size: 15px; color: var(--text-muted); cursor: pointer; font-family: 'DM Sans', sans-serif; margin-top: 4px; }
+
+  /* TOAST */
+  .toast {
+    position: fixed; bottom: 24px; left: 50%; transform: translateX(-50%) translateY(80px);
+    background: var(--text); color: white; padding: 12px 20px; border-radius: 20px;
+    font-size: 14px; font-weight: 500; z-index: 200; transition: transform 0.3s ease;
+    white-space: nowrap; pointer-events: none;
+  }
+  .toast.show { transform: translateX(-50%) translateY(0); }
+
+  /* UTILITY */
+  .text-approx { color: var(--approx); }
+  .hit-target { min-height: 48px; display: flex; align-items: center; }
+</style>
+</head>
+<body>
+
+<!-- API KEY SETUP SCREEN -->
+<div class="setup-screen hidden" id="setup-screen">
+  <div class="setup-logo">Protein</div>
+  <div class="setup-sub">Enter your Anthropic API key to enable<br>AI-powered food logging.</div>
+  <div class="setup-label">Anthropic API Key</div>
+  <input class="setup-input" id="setup-key-input" type="password"
+    placeholder="sk-ant-..." autocomplete="off" autocorrect="off" spellcheck="false">
+  <button class="setup-save-btn" onclick="saveApiKey()">Save Key & Continue →</button>
+  <div class="setup-hint">
+    Get a free key at <a href="https://console.anthropic.com" target="_blank">console.anthropic.com</a><br>
+    Your key is stored only on this device.<br>It is never sent to GitHub or anyone else.
+  </div>
+  <div class="setup-divider"></div>
+  <div class="setup-hint">
+    <strong>No key?</strong> You can still use quick-add and saved meals —<br>just skip AI logging for now.
+  </div>
+  <button class="setup-save-btn" onclick="skipApiKey()" style="background:var(--surface);color:var(--text);border:1.5px solid var(--border);margin-top:12px;">
+    Skip for now
+  </button>
+</div>
+
+<div class="header">
+  <div>
+    <div class="header-title">Protein</div>
+    <div class="header-date" id="header-date"></div>
+  </div>
+  <div class="header-nav">
+    <button class="key-manage" onclick="openSetupScreen()" title="Manage API key">
+      <span class="key-indicator">
+        <span class="key-dot" id="key-dot"></span>API Key
+      </span>
+    </button>
+    <button class="nav-btn active" onclick="showView('today')">Today</button>
+    <button class="nav-btn" onclick="showView('history')">History</button>
+    <button class="nav-btn" onclick="showView('meals')">Meals</button>
+  </div>
+</div>
+
+<div class="scroll-area">
+
+  <!-- TODAY VIEW -->
+  <div id="view-today">
+
+    <!-- Ring Card -->
+    <div class="ring-card">
+      <div class="ring-wrap">
+        <svg width="160" height="160" viewBox="0 0 160 160">
+          <circle class="ring-bg" cx="80" cy="80" r="70"/>
+          <circle class="ring-fill" id="ring-fill" cx="80" cy="80" r="70"
+            stroke-dasharray="439.82" stroke-dashoffset="439.82"/>
+        </svg>
+        <div class="ring-center">
+          <div class="ring-grams" id="ring-grams">0</div>
+          <div class="ring-label">grams</div>
+          <div class="ring-approx" id="ring-approx"></div>
+        </div>
+      </div>
+      <div class="ring-stats">
+        <div class="ring-stat">
+          <div class="ring-stat-val" id="stat-remaining">145</div>
+          <div class="ring-stat-lbl">Remaining</div>
+        </div>
+        <div class="ring-stat">
+          <div class="ring-stat-val" id="stat-entries">0</div>
+          <div class="ring-stat-lbl">Entries</div>
+        </div>
+        <div class="ring-stat">
+          <div class="ring-stat-val" id="stat-pct">0%</div>
+          <div class="ring-stat-lbl">of Goal</div>
+        </div>
+      </div>
+      <div class="goal-range">Goal: <span id="goal-display">135–155g</span></div>
+    </div>
+
+    <!-- AI Follow-up bubble -->
+    <div class="ai-bubble" id="ai-bubble">
+      <div id="ai-bubble-content"></div>
+    </div>
+
+    <!-- Log Card -->
+    <div class="log-card">
+      <div class="log-input-wrap">
+        <textarea class="log-input" id="log-input" placeholder="What did you eat?" rows="1"
+          oninput="autoResize(this)" onkeydown="handleEnter(event)"></textarea>
+        <button class="log-btn" id="log-btn" onclick="submitLog()">Log →</button>
+      </div>
+
+      <!-- Shortcut tabs -->
+      <div class="shortcuts-tabs">
+        <div class="shortcut-tab active" onclick="switchTab('quick')">Quick Adds</div>
+        <div class="shortcut-tab" onclick="switchTab('saved')">My Meals</div>
+      </div>
+
+      <div class="shortcuts-panel active" id="panel-quick"></div>
+      <div class="shortcuts-panel" id="panel-saved"></div>
+    </div>
+
+    <!-- Today's log -->
+    <div class="section-label">Today's Log</div>
+    <div class="log-entries" id="log-entries">
+      <div class="empty-state">
+        <div class="empty-icon">🥗</div>
+        Log your first meal above
+      </div>
+    </div>
+
+  </div>
+
+  <!-- HISTORY VIEW -->
+  <div id="view-history">
+    <div class="section-label">Past Days</div>
+    <div id="history-list"></div>
+
+    <div style="margin-top:8px">
+      <button class="export-btn" onclick="toggleExport()">
+        <span>📋 Export / Backup Data</span>
+        <span id="export-chevron" style="font-size:12px">▼</span>
+      </button>
+      <div class="export-panel" id="export-panel">
+        <textarea class="export-textarea" id="export-text" rows="10" readonly placeholder="Your data will appear here..."></textarea>
+        <div class="export-actions">
+          <button class="export-action-btn" onclick="copyExport()">Copy All</button>
+          <button class="export-action-btn" onclick="shareExport()">Share…</button>
+          <button class="export-action-btn" onclick="importPrompt()" style="color:var(--text-muted)">Restore</button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- MEALS VIEW -->
+  <div id="view-meals">
+
+    <!-- QUICK ADDS SECTION -->
+    <div class="collapsible-section">
+      <div class="collapsible-header" onclick="toggleSection('qa-section')">
+        <div class="collapsible-title">
+          <span class="collapsible-icon" id="qa-section-icon">▾</span>
+          Quick Adds
+        </div>
+        <button class="section-edit-btn" id="qa-section-edit-btn" onclick="event.stopPropagation(); toggleQuickEdit()">Edit</button>
+      </div>
+      <div class="collapsible-body" id="qa-section">
+        <div id="meals-view-quick-chips" class="chip-grid"></div>
+        <button class="add-meal-btn" id="qa-add-btn" style="display:none" onclick="openAddQuickAdd()">+ Add Quick-Add</button>
+      </div>
+    </div>
+
+    <!-- SAVED MEALS SECTION -->
+    <div class="collapsible-section">
+      <div class="collapsible-header" onclick="toggleSection('saved-section')">
+        <div class="collapsible-title">
+          <span class="collapsible-icon" id="saved-section-icon">▾</span>
+          Saved Meals
+        </div>
+        <button class="section-edit-btn" id="saved-section-edit-btn" onclick="event.stopPropagation(); toggleMealEdit()">Edit</button>
+      </div>
+      <div class="collapsible-body" id="saved-section">
+        <div id="meals-list"></div>
+        <button class="add-meal-btn" onclick="openAddMeal()">+ Save a New Meal</button>
+      </div>
+    </div>
+
+  </div>
+
+</div>
+
+<!-- ADD QUICK-ADD MODAL -->
+<div class="modal-overlay" id="qa-overlay" onclick="if(event.target===this)closeAddQuickAdd()">
+  <div class="modal">
+    <div class="modal-title">New Quick-Add</div>
+    <div class="modal-row">
+      <div class="modal-field">
+        <div class="modal-label">Emoji</div>
+        <input class="modal-input" id="qa-emoji" placeholder="🍗" maxlength="2" style="font-size:24px;text-align:center;">
+      </div>
+      <div class="modal-field" style="flex:3">
+        <div class="modal-label">Food Name</div>
+        <input class="modal-input" id="qa-name" placeholder="Chicken">
+      </div>
+    </div>
+    <div class="modal-field">
+      <div class="modal-label">Portion Description</div>
+      <input class="modal-input" id="qa-portion" placeholder="handful, 1 cup, 1 egg…">
+    </div>
+    <div class="modal-row">
+      <div class="modal-field">
+        <div class="modal-label">Protein (g)</div>
+        <input class="modal-input" id="qa-protein" type="number" placeholder="30" inputmode="decimal">
+      </div>
+      <div class="modal-field">
+        <div class="modal-label">Estimated?</div>
+        <select class="modal-input" id="qa-approx">
+          <option value="true">~ Yes</option>
+          <option value="false">Exact</option>
+        </select>
+      </div>
+    </div>
+    <button class="modal-save-btn" onclick="saveQuickAdd()">Add Chip</button>
+    <button class="modal-cancel" onclick="closeAddQuickAdd()">Cancel</button>
+  </div>
+</div>
+
+<!-- IMPORT MODAL -->
+<div class="modal-overlay" id="import-overlay" onclick="closeImportModal(event)">
+  <div class="modal">
+    <div class="modal-title">Restore Backup</div>
+    <p style="font-size:14px;color:var(--text-muted);margin-bottom:16px;line-height:1.5">Paste your previously exported data below. This will <strong style="color:var(--warn)">merge</strong> with existing data (won't delete current entries).</p>
+    <div class="modal-field">
+      <div class="modal-label">Paste Export Data</div>
+      <textarea class="modal-input" id="import-text" rows="8" placeholder="Paste your exported JSON here..." style="font-size:13px;line-height:1.5"></textarea>
+    </div>
+    <button class="modal-save-btn" onclick="doImport()">Restore Data</button>
+    <button class="modal-cancel" onclick="closeImportModalDirect()">Cancel</button>
+  </div>
+</div>
+
+<div class="modal-overlay" id="modal-overlay" onclick="closeModal(event)">
+  <div class="modal">
+    <div class="modal-title">Save a Meal</div>
+    <div class="modal-row">
+      <div class="modal-field">
+        <div class="modal-label">Emoji</div>
+        <input class="modal-input" id="meal-emoji" placeholder="🍌" maxlength="2" style="font-size:24px;text-align:center;">
+      </div>
+      <div class="modal-field" style="flex:3">
+        <div class="modal-label">Meal Name</div>
+        <input class="modal-input" id="meal-name" placeholder="Banana Yogurt Bowl">
+      </div>
+    </div>
+    <div class="modal-field">
+      <div class="modal-label">Ingredients / Notes</div>
+      <input class="modal-input" id="meal-items" placeholder="Greek yogurt, banana, peanut butter">
+    </div>
+    <div class="modal-field">
+      <div class="modal-label">Estimated Protein (g)</div>
+      <input class="modal-input" id="meal-protein" type="number" placeholder="21" inputmode="decimal">
+    </div>
+    <div class="modal-field">
+      <div class="modal-label">Is this an estimate?</div>
+      <select class="modal-input" id="meal-approx">
+        <option value="true">Yes — mark as ~approximate</option>
+        <option value="false">No — exact value</option>
+      </select>
+    </div>
+    <button class="modal-save-btn" onclick="saveMeal()">Save Meal</button>
+    <button class="modal-cancel" onclick="closeModalDirect()">Cancel</button>
+  </div>
+</div>
+
+<div class="toast" id="toast"></div>
+
+<script>
+// ── CONSTANTS ──────────────────────────────────────────────
+const GOAL = 145;
+const GOAL_LOW = 135;
+const GOAL_HIGH = 155;
+const CIRCUMFERENCE = 439.82;
+
+const DEFAULT_QUICK_ADDS = [
+  { emoji: '🍗', name: 'Chicken', portion: 'handful', protein: 30, approx: true },
+  { emoji: '🥛', name: 'Greek Yogurt', portion: 'bowl (~1 cup)', protein: 17, approx: true },
+  { emoji: '🥤', name: 'Protein Shake', portion: '1 scoop', protein: 25, approx: false },
+  { emoji: '🥜', name: 'Peanut Butter', portion: '1 tbsp', protein: 4, approx: false },
+];
+
+function loadQuickAdds() {
+  const stored = localStorage.getItem('protein_quick_adds');
+  return stored ? JSON.parse(stored) : JSON.parse(JSON.stringify(DEFAULT_QUICK_ADDS));
+}
+function saveQuickAdds(adds) {
+  localStorage.setItem('protein_quick_adds', JSON.stringify(adds));
+}
+
+// ── STATE ──────────────────────────────────────────────────
+const todayKey = () => new Date().toISOString().slice(0, 10);
+
+function loadData() {
+  return JSON.parse(localStorage.getItem('protein_data') || '{}');
+}
+function saveData(data) {
+  localStorage.setItem('protein_data', JSON.stringify(data));
+}
+function getToday() {
+  const data = loadData();
+  const key = todayKey();
+  if (!data[key]) data[key] = { entries: [] };
+  return { data, key };
+}
+function loadMeals() {
+  return JSON.parse(localStorage.getItem('protein_meals') || '[]');
+}
+function saveMeals(meals) {
+  localStorage.setItem('protein_meals', JSON.stringify(meals));
+}
+
+// ── API KEY ────────────────────────────────────────────────
+function getApiKey() {
+  return localStorage.getItem('protein_api_key') || '';
+}
+function saveApiKey() {
+  const key = document.getElementById('setup-key-input').value.trim();
+  if (!key.startsWith('sk-ant-') && key !== '') {
+    showToast('Key should start with sk-ant-…');
+    return;
+  }
+  if (!key) { showToast('Please enter a key or skip'); return; }
+  localStorage.setItem('protein_api_key', key);
+  closeSetupScreen();
+  updateKeyIndicator();
+  showToast('API key saved ✓');
+}
+function skipApiKey() {
+  localStorage.setItem('protein_api_key_skipped', 'true');
+  closeSetupScreen();
+}
+function openSetupScreen() {
+  const screen = document.getElementById('setup-screen');
+  screen.classList.remove('hidden');
+  const existing = getApiKey();
+  if (existing) {
+    document.getElementById('setup-key-input').value = existing;
+  }
+}
+function closeSetupScreen() {
+  document.getElementById('setup-screen').classList.add('hidden');
+  document.getElementById('setup-key-input').value = '';
+}
+function updateKeyIndicator() {
+  const dot = document.getElementById('key-dot');
+  dot.classList.toggle('missing', !getApiKey());
+}
+
+// ── INIT ───────────────────────────────────────────────────
+let activeShortcutTab = 'quick';
+let aiState = null; // pending AI interaction state
+
+document.addEventListener('DOMContentLoaded', () => {
+  document.getElementById('header-date').textContent = new Date().toLocaleDateString('en-US', { weekday: 'long', month: 'long', day: 'numeric' });
+  // Show setup screen if no key and never skipped
+  const hasKey = !!getApiKey();
+  const skipped = !!localStorage.getItem('protein_api_key_skipped');
+  if (!hasKey && !skipped) {
+    document.getElementById('setup-screen').classList.remove('hidden');
+  }
+  updateKeyIndicator();
+  renderQuickAdds();
+  renderSavedMealsChips();
+  renderTodayEntries();
+  renderHistory();
+  renderMealsView();
+});
+
+// ── VIEWS ──────────────────────────────────────────────────
+function showView(v) {
+  ['today', 'history', 'meals'].forEach(n => {
+    document.getElementById('view-' + n).style.display = n === v ? 'flex' : 'none';
+  });
+  document.querySelectorAll('.nav-btn').forEach((b, i) => {
+    b.classList.toggle('active', ['today', 'history', 'meals'][i] === v);
+  });
+  if (v === 'history') renderHistory();
+  if (v === 'meals') renderMealsView();
+}
+
+// ── RING ───────────────────────────────────────────────────
+function updateRing() {
+  const { data, key } = getToday();
+  const entries = data[key]?.entries || [];
+  const total = entries.reduce((s, e) => s + e.protein, 0);
+  const hasApprox = entries.some(e => e.approx);
+  const pct = Math.min(total / GOAL, 1);
+  const offset = CIRCUMFERENCE - pct * CIRCUMFERENCE;
+  const fill = document.getElementById('ring-fill');
+  fill.style.strokeDashoffset = offset;
+  // Color change near goal
+  fill.style.stroke = total >= GOAL_LOW ? '#2D5016' : (total >= GOAL * 0.6 ? '#5A8A30' : '#8AB860');
+  document.getElementById('ring-grams').textContent = (hasApprox ? '~' : '') + Math.round(total);
+  document.getElementById('ring-approx').textContent = hasApprox ? 'estimated' : '';
+  document.getElementById('stat-remaining').textContent = Math.max(0, GOAL_LOW - Math.round(total)) + 'g';
+  document.getElementById('stat-entries').textContent = entries.length;
+  document.getElementById('stat-pct').textContent = Math.round(pct * 100) + '%';
+}
+
+// ── QUICK ADDS RENDER ──────────────────────────────────────
+let quickEditMode = false;
+
+function renderQuickAdds() {
+  const adds = loadQuickAdds();
+  const panel = document.getElementById('panel-quick');
+  const editBtn = document.getElementById('quick-edit-btn');
+  if (editBtn) editBtn.textContent = quickEditMode ? 'Done' : 'Edit';
+
+  if (!adds.length && !quickEditMode) {
+    panel.innerHTML = `<div style="padding:12px 4px;color:var(--text-muted);font-size:14px">No quick-adds yet — tap Edit to add some.</div>`;
+    return;
+  }
+
+  const chips = adds.map((q, i) => {
+    if (quickEditMode) {
+      return `<div class="shortcut-chip" style="position:relative;padding-right:28px">
+        <span>${q.emoji}</span>
+        <span>${q.name} <span style="color:var(--text-muted);font-size:11px">${q.portion}</span></span>
+        <span class="chip-protein">${q.approx ? '~' : ''}${q.protein}g</span>
+        <button onclick="deleteQuickAdd(${i})" style="position:absolute;right:6px;top:50%;transform:translateY(-50%);background:var(--warn-light);border:none;color:var(--warn);border-radius:50%;width:18px;height:18px;font-size:12px;line-height:1;cursor:pointer;display:flex;align-items:center;justify-content:center;padding:0;">×</button>
+      </div>`;
+    }
+    return `<button class="shortcut-chip" onclick="quickAdd(${i})">
+      <span>${q.emoji}</span>
+      <span>${q.name} <span style="color:var(--text-muted);font-size:11px">${q.portion}</span></span>
+      <span class="chip-protein">${q.approx ? '~' : ''}${q.protein}g</span>
+    </button>`;
+  }).join('');
+
+  const addChip = quickEditMode
+    ? `<button class="shortcut-chip" onclick="openAddQuickAdd()" style="border-style:dashed;color:var(--accent);border-color:var(--accent)">
+        <span>+</span><span>Add chip</span>
+      </button>`
+    : '';
+
+  panel.innerHTML = chips + addChip;
+  renderMealsViewQuickChips();
+}
+
+function toggleQuickEdit() {
+  quickEditMode = !quickEditMode;
+  renderQuickAdds();
+}
+
+function renderMealsViewQuickChips() {
+  const adds = loadQuickAdds();
+  const grid = document.getElementById('meals-view-quick-chips');
+  const addBtn = document.getElementById('qa-add-btn');
+  const editBtn = document.getElementById('qa-section-edit-btn');
+  if (!grid) return;
+  if (editBtn) {
+    editBtn.textContent = quickEditMode ? 'Done' : 'Edit';
+    editBtn.classList.toggle('active', quickEditMode);
+  }
+  if (addBtn) addBtn.style.display = quickEditMode ? '' : 'none';
+
+  if (!adds.length) {
+    grid.innerHTML = quickEditMode ? '' : '<div style="color:var(--text-muted);font-size:14px;padding:4px 0">No quick-adds yet.</div>';
+  } else {
+    grid.innerHTML = adds.map((q, i) => {
+      if (quickEditMode) {
+        return `<div class="shortcut-chip" style="position:relative;padding-right:28px">
+          <span>${q.emoji}</span>
+          <span>${q.name} <span style="color:var(--text-muted);font-size:11px">${q.portion}</span></span>
+          <span class="chip-protein">${q.approx ? '~' : ''}${q.protein}g</span>
+          <button onclick="deleteQuickAdd(${i})" style="position:absolute;right:6px;top:50%;transform:translateY(-50%);background:var(--warn-light);border:none;color:var(--warn);border-radius:50%;width:18px;height:18px;font-size:12px;line-height:1;cursor:pointer;display:flex;align-items:center;justify-content:center;padding:0;">×</button>
+        </div>`;
+      }
+      return `<button class="shortcut-chip" onclick="quickAdd(${i}); showView('today')">
+        <span>${q.emoji}</span>
+        <span>${q.name} <span style="color:var(--text-muted);font-size:11px">${q.portion}</span></span>
+        <span class="chip-protein">${q.approx ? '~' : ''}${q.protein}g</span>
+      </button>`;
+    }).join('');
+  }
+}
+
+function deleteQuickAdd(index) {
+  const adds = loadQuickAdds();
+  adds.splice(index, 1);
+  saveQuickAdds(adds);
+  renderQuickAdds();
+}
+
+function openAddQuickAdd() {
+  document.getElementById('qa-emoji').value = '';
+  document.getElementById('qa-name').value = '';
+  document.getElementById('qa-portion').value = '';
+  document.getElementById('qa-protein').value = '';
+  document.getElementById('qa-approx').value = 'true';
+  document.getElementById('qa-overlay').classList.add('open');
+  document.getElementById('qa-name').focus();
+}
+
+function closeAddQuickAdd() {
+  document.getElementById('qa-overlay').classList.remove('open');
+}
+
+function saveQuickAdd() {
+  const emoji = document.getElementById('qa-emoji').value.trim() || '🍽️';
+  const name = document.getElementById('qa-name').value.trim();
+  const portion = document.getElementById('qa-portion').value.trim();
+  const protein = parseFloat(document.getElementById('qa-protein').value);
+  const approx = document.getElementById('qa-approx').value === 'true';
+  if (!name || isNaN(protein)) { showToast('Fill in name and protein'); return; }
+  const adds = loadQuickAdds();
+  adds.push({ emoji, name, portion: portion || 'serving', protein, approx });
+  saveQuickAdds(adds);
+  closeAddQuickAdd();
+  renderQuickAdds();
+  showToast(`${emoji} ${name} added`);
+}
+
+function renderSavedMealsChips() {
+  const meals = loadMeals();
+  const panel = document.getElementById('panel-saved');
+  if (!meals.length) {
+    panel.innerHTML = `<div style="padding:12px 4px;color:var(--text-muted);font-size:14px">No saved meals yet — add one in the Meals tab.</div>`;
+    return;
+  }
+  panel.innerHTML = meals.map((m, i) => `
+    <button class="shortcut-chip" onclick="logSavedMeal(${i})">
+      <span>${m.emoji}</span>
+      <span>${m.name}</span>
+      <span class="chip-protein">${m.approx ? '~' : ''}${m.protein}g</span>
+    </button>
+  `).join('');
+}
+
+function switchTab(tab) {
+  activeShortcutTab = tab;
+  document.querySelectorAll('.shortcut-tab').forEach((t, i) => {
+    t.classList.toggle('active', ['quick','saved'][i] === tab);
+  });
+  document.getElementById('panel-quick').classList.toggle('active', tab === 'quick');
+  document.getElementById('panel-saved').classList.toggle('active', tab === 'saved');
+}
+
+// ── LOGGING ────────────────────────────────────────────────
+function quickAdd(index) {
+  const q = loadQuickAdds()[index];
+  addEntry({ name: `${q.name} (${q.portion})`, protein: q.protein, approx: q.approx, source: 'quick' });
+}
+
+function logSavedMeal(index) {
+  const m = loadMeals()[index];
+  addEntry({ name: `${m.emoji} ${m.name}`, protein: m.protein, approx: m.approx !== false, source: 'meal' });
+}
+
+function addEntry(entry) {
+  const { data, key } = getToday();
+  data[key].entries.unshift({ ...entry, id: Date.now(), time: new Date().toLocaleTimeString('en-US', { hour: 'numeric', minute: '2-digit' }) });
+  saveData(data);
+  renderTodayEntries();
+  updateRing();
+  showToast(`+${entry.approx ? '~' : ''}${entry.protein}g logged`);
+}
+
+function deleteEntry(id) {
+  const { data, key } = getToday();
+  data[key].entries = data[key].entries.filter(e => e.id !== id);
+  saveData(data);
+  renderTodayEntries();
+  updateRing();
+}
+
+function renderTodayEntries() {
+  const { data, key } = getToday();
+  const entries = data[key]?.entries || [];
+  const el = document.getElementById('log-entries');
+  updateRing();
+  if (!entries.length) {
+    el.innerHTML = `<div class="empty-state"><div class="empty-icon">🥗</div>Log your first meal above</div>`;
+    return;
+  }
+  el.innerHTML = entries.map(e => `
+    <div class="log-entry">
+      <div class="entry-left">
+        <div class="entry-name">${e.name}</div>
+        <div class="entry-meta">${e.time}${e.note ? ' · ' + e.note : ''}</div>
+      </div>
+      <div class="entry-right">
+        <div class="entry-protein ${e.approx ? 'entry-approx' : ''}">${e.approx ? '~' : ''}${e.protein}g</div>
+        <button class="entry-delete" onclick="deleteEntry(${e.id})">×</button>
+      </div>
+    </div>
+  `).join('');
+}
+
+// ── AI LOG ─────────────────────────────────────────────────
+function autoResize(el) {
+  el.style.height = 'auto';
+  el.style.height = Math.min(el.scrollHeight, 120) + 'px';
+}
+
+function handleEnter(e) {
+  if (e.key === 'Enter' && !e.shiftKey) {
+    e.preventDefault();
+    submitLog();
+  }
+}
+
+async function submitLog() {
+  const input = document.getElementById('log-input');
+  const text = input.value.trim();
+  if (!text) return;
+
+  // If we're in a follow-up state, handle that
+  if (aiState && aiState.awaitingFollowup) {
+    finalizeAILog(text);
+    return;
+  }
+
+  input.value = '';
+  input.style.height = 'auto';
+  document.getElementById('log-btn').disabled = true;
+  showAILoading();
+
+  const meals = loadMeals();
+  const mealsContext = meals.length
+    ? `The user has these saved meals: ${meals.map(m => `"${m.emoji} ${m.name}" (~${m.protein}g)`).join(', ')}.`
+    : '';
+
+  const prompt = `You are a protein tracking assistant. The user just logged: "${text}"
+
+${mealsContext}
+
+Your job: interpret what they ate and either (A) log it directly with a protein estimate, or (B) ask ONE short follow-up question if you need more info to give a reasonable estimate.
+
+Respond ONLY with valid JSON in one of these two formats:
+
+Format A - Log directly:
+{"action":"log","name":"[food name]","protein":[number],"approx":true/false,"note":"[optional short note like 'restaurant estimate']"}
+
+Format B - Ask follow-up:
+{"action":"followup","question":"[1 short question, max 12 words]","options":["option 1 (~Xg)","option 2 (~Xg)","option 3 (~Xg)"]}
+
+Rules:
+- If it matches a saved meal name, log it directly as that meal
+- For restaurant food, always ask about size/type unless obvious
+- For home cooked or simple foods, log directly
+- Protein estimates should be realistic mid-range values
+- Mark approx:true for anything estimated, false only for things like "1 scoop protein powder"
+- Keep option labels short and include rough protein in parens
+- Never ask more than one question`;
+
+  try {
+    const apiKey = getApiKey();
+    if (!apiKey) {
+      hideAIBubble();
+      document.getElementById('log-btn').disabled = false;
+      showToast('Add an API key to use AI logging');
+      openSetupScreen();
+      return;
+    }
+    const res = await fetch('https://api.anthropic.com/v1/messages', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json', 'x-api-key': apiKey, 'anthropic-version': '2023-06-01', 'anthropic-dangerous-direct-browser-access': 'true' },
+      body: JSON.stringify({
+        model: 'claude-sonnet-4-20250514',
+        max_tokens: 300,
+        messages: [{ role: 'user', content: prompt }]
+      })
+    });
+    const data = await res.json();
+    const raw = data.content?.map(c => c.text || '').join('');
+    const json = JSON.parse(raw.replace(/```json|```/g, '').trim());
+
+    if (json.action === 'log') {
+      hideAIBubble();
+      addEntry({ name: json.name, protein: json.protein, approx: json.approx, note: json.note || '' });
+    } else if (json.action === 'followup') {
+      showFollowup(json.question, json.options, text);
+    }
+  } catch (err) {
+    hideAIBubble();
+    showToast('Couldn\'t parse — try a quick add');
+    console.error(err);
+  }
+
+  document.getElementById('log-btn').disabled = false;
+}
+
+function showAILoading() {
+  const bubble = document.getElementById('ai-bubble');
+  document.getElementById('ai-bubble-content').innerHTML = `
+    <div class="ai-loading">
+      <div class="ai-dots"><div class="ai-dot"></div><div class="ai-dot"></div><div class="ai-dot"></div></div>
+      <span>Figuring that out...</span>
+    </div>`;
+  bubble.classList.add('visible');
+}
+
+function showFollowup(question, options, originalInput) {
+  aiState = { awaitingFollowup: true, originalInput };
+  const bubble = document.getElementById('ai-bubble');
+  document.getElementById('ai-bubble-content').innerHTML = `
+    <div class="ai-bubble-text"><strong>Quick question:</strong> ${question}</div>
+    <div class="ai-options">
+      ${options.map(o => `<button class="ai-option" onclick="selectAIOption('${o.replace(/'/g,"\\'")}', '${originalInput.replace(/'/g,"\\'")}', '${question.replace(/'/g,"\\'")}', this)">${o}</button>`).join('')}
+      <button class="ai-option" onclick="closeAIBubble()" style="color:var(--text-muted)">Cancel</button>
+    </div>`;
+  bubble.classList.add('visible');
+}
+
+async function selectAIOption(option, originalInput, question, btn) {
+  // Disable all buttons
+  btn.closest('.ai-options').querySelectorAll('button').forEach(b => b.disabled = true);
+  showAILoading();
+
+  const prompt = `The user is logging food. Original input: "${originalInput}". You asked: "${question}". They answered: "${option}".
+
+Now give a final protein estimate and log it.
+
+Respond ONLY with valid JSON:
+{"action":"log","name":"[descriptive food name]","protein":[number],"approx":true/false,"note":"[optional short note]"}`;
+
+  try {
+    const apiKey = getApiKey();
+    const res = await fetch('https://api.anthropic.com/v1/messages', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json', 'x-api-key': apiKey, 'anthropic-version': '2023-06-01', 'anthropic-dangerous-direct-browser-access': 'true' },
+      body: JSON.stringify({
+        model: 'claude-sonnet-4-20250514',
+        max_tokens: 200,
+        messages: [{ role: 'user', content: prompt }]
+      })
+    });
+    const data = await res.json();
+    const raw = data.content?.map(c => c.text || '').join('');
+    const json = JSON.parse(raw.replace(/```json|```/g, '').trim());
+    hideAIBubble();
+    addEntry({ name: json.name, protein: json.protein, approx: json.approx, note: json.note || '' });
+  } catch (err) {
+    hideAIBubble();
+    showToast('Error — try again');
+  }
+  aiState = null;
+}
+
+function hideAIBubble() {
+  document.getElementById('ai-bubble').classList.remove('visible');
+  aiState = null;
+}
+function closeAIBubble() { hideAIBubble(); }
+
+// ── HISTORY ────────────────────────────────────────────────
+function renderHistory() {
+  const data = loadData();
+  const today = todayKey();
+  const keys = Object.keys(data).filter(k => k !== today).sort().reverse();
+  const el = document.getElementById('history-list');
+  if (!keys.length) {
+    el.innerHTML = `<div class="empty-state"><div class="empty-icon">📅</div>No history yet — check back tomorrow!</div>`;
+    return;
+  }
+  el.innerHTML = keys.map(key => {
+    const entries = data[key].entries || [];
+    const total = entries.reduce((s, e) => s + e.protein, 0);
+    const hasApprox = entries.some(e => e.approx);
+    const pct = Math.min(total / GOAL, 1) * 100;
+    const dateStr = new Date(key + 'T12:00:00').toLocaleDateString('en-US', { weekday: 'short', month: 'short', day: 'numeric' });
+    const metGoal = total >= GOAL_LOW;
+    return `
+      <div class="history-day">
+        <div class="history-day-header" onclick="toggleHistoryDay('${key}')">
+          <div class="history-day-date">${dateStr}</div>
+          <div class="history-day-total" style="color:${metGoal ? 'var(--accent)' : 'var(--text-muted)'}">
+            ${hasApprox ? '~' : ''}${Math.round(total)}g ${metGoal ? '✓' : ''}
+          </div>
+        </div>
+        <div class="history-day-bar"><div class="history-day-bar-fill" style="width:${pct}%"></div></div>
+        <div class="history-day-entries" id="hist-${key}">
+          ${entries.map(e => `<div class="history-entry-row"><span>${e.name}</span><span>${e.approx ? '~' : ''}${e.protein}g</span></div>`).join('')}
+        </div>
+      </div>`;
+  }).join('');
+}
+
+function toggleHistoryDay(key) {
+  const el = document.getElementById('hist-' + key);
+  el.classList.toggle('open');
+}
+
+// ── MEALS ──────────────────────────────────────────────────
+let mealEditMode = false;
+
+function renderMealsView() {
+  renderMealsViewQuickChips();
+  renderSavedMealsList();
+}
+
+function renderSavedMealsList() {
+  const meals = loadMeals();
+  const el = document.getElementById('meals-list');
+  const editBtn = document.getElementById('saved-section-edit-btn');
+  if (!el) return;
+  if (editBtn) {
+    editBtn.textContent = mealEditMode ? 'Done' : 'Edit';
+    editBtn.classList.toggle('active', mealEditMode);
+  }
+  if (!meals.length) {
+    el.innerHTML = `<div class="empty-state" style="padding:16px 4px"><div class="empty-icon">🍽️</div>Save your go-to meals here for one-tap logging</div>`;
+    return;
+  }
+  el.innerHTML = meals.map((m, i) => `
+    <div class="meal-card">
+      <div class="meal-left">
+        <div class="meal-emoji">${m.emoji}</div>
+        <div>
+          <div class="meal-name">${m.name}</div>
+          <div class="meal-items">${m.items || ''}</div>
+        </div>
+      </div>
+      <div class="meal-right">
+        <div class="meal-protein">${m.approx !== false ? '~' : ''}${m.protein}g</div>
+        ${mealEditMode
+          ? `<button class="meal-delete-btn" style="color:var(--warn);font-size:22px" onclick="deleteMeal(${i})">×</button>`
+          : `<button class="meal-log-btn" onclick="logSavedMealFromView(${i})">Log</button>`
+        }
+      </div>
+    </div>
+  `).join('');
+}
+
+function toggleMealEdit() {
+  mealEditMode = !mealEditMode;
+  renderSavedMealsList();
+}
+
+function toggleSection(id) {
+  const body = document.getElementById(id);
+  const icon = document.getElementById(id + '-icon');
+  body.classList.toggle('closed');
+  icon.classList.toggle('closed');
+}
+
+function logSavedMealFromView(i) {
+  logSavedMeal(i);
+  showView('today');
+  showToast('Meal logged!');
+}
+
+function deleteMeal(i) {
+  const meals = loadMeals();
+  meals.splice(i, 1);
+  saveMeals(meals);
+  renderSavedMealsList();
+  renderSavedMealsChips();
+  showToast('Meal removed');
+}
+
+function openAddMeal() {
+  document.getElementById('modal-overlay').classList.add('open');
+  document.getElementById('meal-name').focus();
+}
+
+function closeModal(e) {
+  if (e.target === document.getElementById('modal-overlay')) closeModalDirect();
+}
+function closeModalDirect() {
+  document.getElementById('modal-overlay').classList.remove('open');
+  ['meal-emoji','meal-name','meal-items','meal-protein'].forEach(id => document.getElementById(id).value = '');
+}
+
+function saveMeal() {
+  const emoji = document.getElementById('meal-emoji').value.trim() || '🍽️';
+  const name = document.getElementById('meal-name').value.trim();
+  const items = document.getElementById('meal-items').value.trim();
+  const protein = parseFloat(document.getElementById('meal-protein').value);
+  const approx = document.getElementById('meal-approx').value === 'true';
+  if (!name || isNaN(protein)) { showToast('Please fill in name and protein'); return; }
+  const meals = loadMeals();
+  meals.push({ emoji, name, items, protein, approx });
+  saveMeals(meals);
+  closeModalDirect();
+  renderSavedMealsList();
+  renderSavedMealsChips();
+  showToast(`${emoji} ${name} saved!`);
+}
+
+// ── EXPORT / IMPORT ───────────────────────────────────────
+function buildExportText() {
+  const data = loadData();
+  const meals = loadMeals();
+  const allKeys = Object.keys(data).sort();
+  const lines = [];
+  lines.push('PROTEIN TRACKER BACKUP');
+  lines.push('Exported: ' + new Date().toLocaleString());
+  lines.push('Goal: ' + GOAL_LOW + '–' + GOAL_HIGH + 'g/day');
+  lines.push('');
+  lines.push('── DAILY LOG ──');
+  allKeys.forEach(key => {
+    const entries = data[key]?.entries || [];
+    if (!entries.length) return;
+    const total = entries.reduce((s, e) => s + e.protein, 0);
+    const hasApprox = entries.some(e => e.approx);
+    const dateStr = new Date(key + 'T12:00:00').toLocaleDateString('en-US', { weekday: 'short', month: 'short', day: 'numeric', year: 'numeric' });
+    lines.push('');
+    lines.push(dateStr + ' — ' + (hasApprox ? '~' : '') + Math.round(total) + 'g');
+    entries.slice().reverse().forEach(e => {
+      lines.push('  ' + (e.approx ? '~' : '') + e.protein + 'g  ' + e.name + (e.note ? '  (' + e.note + ')' : ''));
+    });
+  });
+  if (meals.length) {
+    lines.push('');
+    lines.push('── SAVED MEALS ──');
+    meals.forEach(m => {
+      lines.push(m.emoji + ' ' + m.name + ' — ' + (m.approx !== false ? '~' : '') + m.protein + 'g' + (m.items ? '  (' + m.items + ')' : ''));
+    });
+  }
+  lines.push('');
+  lines.push('── RAW JSON (for restore) ──');
+  lines.push(JSON.stringify({ log: data, meals }, null, 2));
+  return lines.join('\n');
+}
+
+function toggleExport() {
+  const panel = document.getElementById('export-panel');
+  const chevron = document.getElementById('export-chevron');
+  const isOpen = panel.classList.toggle('open');
+  chevron.textContent = isOpen ? '▲' : '▼';
+  if (isOpen) {
+    document.getElementById('export-text').value = buildExportText();
+  }
+}
+
+function copyExport() {
+  const text = document.getElementById('export-text').value;
+  if (navigator.clipboard) {
+    navigator.clipboard.writeText(text).then(() => showToast('Copied to clipboard ✓'));
+  } else {
+    const ta = document.getElementById('export-text');
+    ta.select();
+    document.execCommand('copy');
+    showToast('Copied ✓');
+  }
+}
+
+function shareExport() {
+  const text = document.getElementById('export-text').value;
+  if (navigator.share) {
+    navigator.share({ title: 'Protein Tracker Backup', text });
+  } else {
+    copyExport();
+    showToast('Copied — paste into Notes or email');
+  }
+}
+
+function importPrompt() {
+  document.getElementById('import-overlay').classList.add('open');
+  setTimeout(() => document.getElementById('import-text').focus(), 100);
+}
+
+function closeImportModal(e) {
+  if (e.target === document.getElementById('import-overlay')) closeImportModalDirect();
+}
+function closeImportModalDirect() {
+  document.getElementById('import-overlay').classList.remove('open');
+  document.getElementById('import-text').value = '';
+}
+
+function doImport() {
+  const raw = document.getElementById('import-text').value.trim();
+  try {
+    // Extract JSON block from the export text
+    const jsonMatch = raw.match(/── RAW JSON \(for restore\) ──\s*([\s\S]+)/);
+    const jsonStr = jsonMatch ? jsonMatch[1].trim() : raw;
+    const parsed = JSON.parse(jsonStr);
+    if (!parsed.log && !parsed.meals) throw new Error('Invalid format');
+    // Merge log data (don't overwrite existing days)
+    if (parsed.log) {
+      const current = loadData();
+      Object.keys(parsed.log).forEach(key => {
+        if (!current[key]) current[key] = parsed.log[key];
+      });
+      saveData(current);
+    }
+    // Merge meals (add any not already saved by name)
+    if (parsed.meals && parsed.meals.length) {
+      const currentMeals = loadMeals();
+      const existingNames = new Set(currentMeals.map(m => m.name));
+      parsed.meals.forEach(m => { if (!existingNames.has(m.name)) currentMeals.push(m); });
+      saveMeals(currentMeals);
+    }
+    closeImportModalDirect();
+    renderHistory();
+    renderMealsView();
+    renderSavedMealsChips();
+    renderTodayEntries();
+    showToast('Data restored ✓');
+  } catch (e) {
+    showToast('Invalid data — check your paste');
+  }
+}
+
+// ── TOAST ──────────────────────────────────────────────────
+function showToast(msg) {
+  const t = document.getElementById('toast');
+  t.textContent = msg;
+  t.classList.add('show');
+  setTimeout(() => t.classList.remove('show'), 2200);
+}
+</script>
+</body>
+</html>
