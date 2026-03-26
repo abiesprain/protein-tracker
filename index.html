@@ -363,7 +363,23 @@
   .history-day-bar-fill { height: 100%; background: var(--accent); border-radius: 2px; transition: width 0.4s ease; }
   .history-day-entries { padding: 0 16px 14px; display: none; flex-direction: column; gap: 6px; }
   .history-day-entries.open { display: flex; }
-  .history-entry-row { display: flex; justify-content: space-between; font-size: 14px; color: var(--text-muted); }
+  .history-entry-row { display: flex; justify-content: space-between; align-items: center; font-size: 14px; color: var(--text-muted); gap: 8px; }
+  .history-entry-row .entry-name-col { flex: 1; }
+  .history-entry-row .entry-g-col { white-space: nowrap; }
+  .history-entry-del { background: none; border: none; color: var(--warn); font-size: 16px; cursor: pointer; padding: 2px 4px; line-height: 1; flex-shrink: 0; }
+  .history-edit-btn {
+    background: none; border: 1px solid var(--border); border-radius: 12px;
+    padding: 3px 10px; font-size: 11px; font-weight: 500; color: var(--text-muted);
+    cursor: pointer; font-family: 'DM Sans', sans-serif; transition: all 0.15s; margin-left: 8px;
+  }
+  .history-edit-btn.active { background: var(--accent-light); color: var(--accent); border-color: var(--accent); }
+  .history-add-row {
+    display: flex; gap: 6px; align-items: center; padding: 8px 0 2px;
+    border-top: 1px dashed var(--border); margin-top: 4px;
+  }
+  .history-add-name { flex: 1; border: 1px solid var(--border); border-radius: 8px; padding: 7px 10px; font-size: 13px; font-family: 'DM Sans', sans-serif; background: var(--bg); color: var(--text); outline: none; }
+  .history-add-g { width: 48px; border: 1px solid var(--border); border-radius: 8px; padding: 7px 6px; font-size: 13px; font-family: 'DM Sans', sans-serif; background: var(--bg); color: var(--text); outline: none; text-align: center; }
+  .history-add-btn { background: var(--accent); color: white; border: none; border-radius: 8px; padding: 7px 12px; font-size: 13px; font-weight: 500; cursor: pointer; font-family: 'DM Sans', sans-serif; white-space: nowrap; }
 
   /* COLLAPSIBLE SECTIONS */
   .collapsible-section {
@@ -489,15 +505,15 @@
     position: fixed; inset: 0; background: var(--bg); z-index: 401;
     display: none; flex-direction: column; max-width: 430px; margin: 0 auto;
     overflow-y: auto; -webkit-overflow-scrolling: touch;
-    padding-top: env(safe-area-inset-top);
   }
   .settings-panel.open { display: flex; }
   .settings-panel-header {
     padding: 16px 20px; background: var(--bg); border-bottom: 1px solid var(--border);
     display: flex; align-items: center; gap: 12px;
-    position: sticky; top: 0; z-index: 10;
-    min-height: 60px;
+    position: sticky; top: 0; z-index: 10; min-height: 60px;
   }
+  /* Hide main header when any settings panel is open on mobile */
+  body.panel-open .header { display: none; }
   .settings-back-btn {
     background: none; border: none; font-size: 22px; cursor: pointer;
     color: var(--accent); padding: 0; line-height: 1;
@@ -839,6 +855,16 @@
       </div>
     </div>
 
+    <div class="settings-section-label">About</div>
+    <div class="settings-card">
+      <div class="settings-row" style="cursor:default">
+        <div class="settings-row-left">
+          <div class="settings-row-title">Protein Tracker</div>
+          <div class="settings-row-sub">Version 1.1</div>
+        </div>
+      </div>
+    </div>
+
     <div class="settings-section-label">Data</div>
     <div class="settings-card">
       <div class="settings-row" onclick="openSettingsPanel('backup')">
@@ -1148,7 +1174,12 @@ function saveQuickAdds(adds) {
 }
 
 // ── STATE ──────────────────────────────────────────────────
-const todayKey = () => new Date().toISOString().slice(0, 10);
+const todayKey = () => {
+  const d = new Date();
+  return d.getFullYear() + '-' +
+    String(d.getMonth() + 1).padStart(2, '0') + '-' +
+    String(d.getDate()).padStart(2, '0');
+};
 
 function loadData() {
   return JSON.parse(localStorage.getItem('protein_data') || '{}');
@@ -1306,10 +1337,15 @@ function openSettingsPanel(name) {
     document.getElementById('settings-export-text').value = buildExportText();
   }
   panel.classList.add('open');
+  document.body.classList.add('panel-open');
 }
 
 function closeSettingsPanel(name) {
   document.getElementById('panel-' + name).classList.remove('open');
+  // Only remove panel-open if no other panels are open
+  if (!document.querySelector('.settings-panel.open')) {
+    document.body.classList.remove('panel-open');
+  }
 }
 
 function saveApiKeyFromSettings() {
@@ -1947,6 +1983,8 @@ function hideAIBubble() {
 function closeAIBubble() { hideAIBubble(); }
 
 // ── HISTORY ────────────────────────────────────────────────
+let historyEditMode = {}; // tracks which day keys are in edit mode
+
 function renderHistory() {
   const data = loadData();
   const today = todayKey();
@@ -1960,20 +1998,48 @@ function renderHistory() {
     const entries = data[key].entries || [];
     const total = entries.reduce((s, e) => s + e.protein, 0);
     const hasApprox = entries.some(e => e.approx);
-    const pct = Math.min(total / GOAL, 1) * 100;
+    const g = loadGoal();
+    const pct = Math.min(total / g.target, 1) * 100;
     const dateStr = new Date(key + 'T12:00:00').toLocaleDateString('en-US', { weekday: 'short', month: 'short', day: 'numeric' });
-    const metGoal = total >= GOAL_LOW;
+    const metGoal = total >= g.low;
+    const editing = !!historyEditMode[key];
+    const isOpen = editing || document.getElementById('hist-' + key)?.classList.contains('open');
+
+    const entryRows = entries.map((e, i) => editing
+      ? `<div class="history-entry-row">
+           <span class="entry-name-col">${e.name}</span>
+           <span class="entry-g-col">${e.approx ? '~' : ''}${e.protein}g</span>
+           <button class="history-entry-del" onclick="deleteHistoryEntry('${key}', ${i})">×</button>
+         </div>`
+      : `<div class="history-entry-row">
+           <span class="entry-name-col">${e.name}</span>
+           <span class="entry-g-col">${e.approx ? '~' : ''}${e.protein}g</span>
+         </div>`
+    ).join('');
+
+    const addRow = editing ? `
+      <div class="history-add-row">
+        <input class="history-add-name" id="hadd-name-${key}" placeholder="Food name" autocorrect="off">
+        <input class="history-add-g" id="hadd-g-${key}" type="number" placeholder="g" inputmode="decimal">
+        <button class="history-add-btn" onclick="addHistoryEntry('${key}')">Add</button>
+      </div>` : '';
+
     return `
       <div class="history-day">
         <div class="history-day-header" onclick="toggleHistoryDay('${key}')">
           <div class="history-day-date">${dateStr}</div>
-          <div class="history-day-total" style="color:${metGoal ? 'var(--accent)' : 'var(--text-muted)'}">
-            ${hasApprox ? '~' : ''}${Math.round(total)}g ${metGoal ? '✓' : ''}
+          <div style="display:flex;align-items:center">
+            <div class="history-day-total" style="color:${metGoal ? 'var(--accent)' : 'var(--text-muted)'}">
+              ${hasApprox ? '~' : ''}${Math.round(total)}g ${metGoal ? '✓' : ''}
+            </div>
+            <button class="history-edit-btn ${editing ? 'active' : ''}"
+              onclick="event.stopPropagation(); toggleHistoryEdit('${key}')">${editing ? 'Done' : 'Edit'}</button>
           </div>
         </div>
         <div class="history-day-bar"><div class="history-day-bar-fill" style="width:${pct}%"></div></div>
-        <div class="history-day-entries" id="hist-${key}">
-          ${entries.map(e => `<div class="history-entry-row"><span>${e.name}</span><span>${e.approx ? '~' : ''}${e.protein}g</span></div>`).join('')}
+        <div class="history-day-entries ${isOpen ? 'open' : ''}" id="hist-${key}">
+          ${entryRows}
+          ${addRow}
         </div>
       </div>`;
   }).join('');
@@ -1982,6 +2048,41 @@ function renderHistory() {
 function toggleHistoryDay(key) {
   const el = document.getElementById('hist-' + key);
   el.classList.toggle('open');
+}
+
+function toggleHistoryEdit(key) {
+  historyEditMode[key] = !historyEditMode[key];
+  renderHistory();
+  // Re-open the expanded section
+  const el = document.getElementById('hist-' + key);
+  if (el) el.classList.add('open');
+}
+
+function deleteHistoryEntry(key, index) {
+  const data = loadData();
+  if (!data[key]) return;
+  data[key].entries.splice(index, 1);
+  if (!data[key].entries.length) delete data[key];
+  saveData(data);
+  renderHistory();
+  const el = document.getElementById('hist-' + key);
+  if (el) el.classList.add('open');
+}
+
+function addHistoryEntry(key) {
+  const nameEl = document.getElementById('hadd-name-' + key);
+  const gEl = document.getElementById('hadd-g-' + key);
+  const name = nameEl?.value.trim();
+  const protein = parseFloat(gEl?.value);
+  if (!name || isNaN(protein) || protein <= 0) { showToast('Enter name and grams'); return; }
+  const data = loadData();
+  if (!data[key]) data[key] = { entries: [] };
+  data[key].entries.push({ name, protein: Math.round(protein), approx: false, id: Date.now(), time: 'edited', source: 'manual' });
+  saveData(data);
+  renderHistory();
+  const el = document.getElementById('hist-' + key);
+  if (el) el.classList.add('open');
+  showToast('Entry added');
 }
 
 // ── MEALS ──────────────────────────────────────────────────
